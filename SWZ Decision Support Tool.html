@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ARDOT SWZ Decision Support Tool</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
+
+    <!-- Chosen Palette: Official Blue (header/accents), Light Neutrals (backgrounds), Dark Text. -->
+    <!-- Application Structure Plan: Single-page application with tab-like navigation. Added Generate PDF Summary functionality to the Summary page for reporting. -->
+    <!-- Visualization & Content Choices:
+        - All previous choices remain.
+        - PDF Generation: Uses jsPDF to create a formal report including a title, date, a summary table generated using jsPDF-AutoTable, and an image of the summary chart canvas. This provides a portable and professional output of the user's evaluation.
+        - CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. Gemini API features removed. Import/Export removed. -->
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+            color: #1f2937;
+        }
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #e5e7eb; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb { background: #9ca3af; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #6b7280; }
+        .chart-container { position: relative; width: 100%; max-width: 280px; margin-left: auto; margin-right: auto; height: 160px; max-height: 200px; }
+        .summary-chart-container { position: relative; width: 100%; max-width: 700px; margin-left: auto; margin-right: auto; height: 380px; max-height: 450px; }
+        .main-content-area { min-height: calc(100vh - 128px); }
+        .factor-option:hover { background-color: #e0f2fe; }
+        .nav-button.active { background-color: #0369a1; color: white; }
+        .nav-button:hover:not(.active) { background-color: #e0f2fe; color: #0369a1; }
+        .ardot-r-style { font-size: 0.85em; position: relative; top: -0.05em; }
+    </style>
+</head>
+<body class="flex flex-col min-h-screen">
+
+    <header class="bg-blue-700 text-white shadow-lg sticky top-0 z-50">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center">
+                    <img src="image_14d4fb.png" alt="ARDOT Logo" class="h-10 mr-3" onerror="this.onerror=null; this.src='https://placehold.co/120x40/FFFFFF/022047?text=LOGO&font=arial'; this.alt='ARDOT Logo Placeholder';">
+                    <h1 class="text-xl sm:text-2xl font-semibold">
+                        A<span class="ardot-r-style">R</span>DOT SWZ Decision Support Tool
+                    </h1>
+                </div>
+                <div class="sm:hidden">
+                    <button id="mobile-menu-button" class="text-white focus:outline-none p-2 rounded-md hover:bg-blue-600">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container mx-auto flex flex-col sm:flex-row flex-1">
+        <nav id="main-nav" class="w-full sm:w-72 bg-white sm:shadow-md p-4 space-y-1.5 hidden sm:block flex-shrink-0 sm:sticky sm:top-16 self-start" style="max-height: calc(100vh - 64px); overflow-y: auto;">
+            <button data-page="instructions-page" class="w-full text-left px-4 py-2.5 rounded-lg text-sm font-medium text-gray-700 nav-button">Instructions & About</button>
+            <h3 class="px-4 pt-3 pb-1 text-xs font-bold text-gray-500 uppercase tracking-wider">SWZ Systems Evaluation</h3>
+            <button data-page="system-evaluation-page" data-system="TQDS" class="w-full text-left px-4 py-2.5 rounded-lg text-sm font-medium text-gray-700 nav-button">1. Queue Detection (TQDS)</button>
+            <button data-page="system-evaluation-page" data-system="TSMS" class="w-full text-left px-4 py-2.5 rounded-lg text-sm font-medium text-gray-700 nav-button">2. Speed Monitoring (TSMS)</button>
+            <button data-page="system-evaluation-page" data-system="TCEAS" class="w-full text-left px-4 py-2.5 rounded-lg text-sm font-medium text-gray-700 nav-button">3. Equipment Alert (TCEAS)</button>
+            <button data-page="system-evaluation-page" data-system="TTTS" class="w-full text-left px-4 py-2.5 rounded-lg text-sm font-medium text-gray-700 nav-button">4. Travel Time (TTTS)</button>
+            <button data-page="system-evaluation-page" data-system="TIDSS" class="w-full text-left px-4 py-2.5 rounded-lg text-sm font-medium text-gray-700 nav-button">5. Incident Detection (TIDSS)</button>
+            <button data-page="system-evaluation-page" data-system="TOHWS" class="w-full text-left px-4 py-2.5 rounded-lg text-sm font-medium text-gray-700 nav-button">6. Over-height Warning (TOHWS)</button>
+            <button data-page="system-evaluation-page" data-system="DLMS" class="w-full text-left px-4 py-2.5 rounded-lg text-sm font-medium text-gray-700 nav-button">7. Dynamic Lane Merge (DLMS)</button>
+            <button data-page="system-evaluation-page" data-system="VSLS" class="w-full text-left px-4 py-2.5 rounded-lg text-sm font-medium text-gray-700 nav-button">8. Variable Speed Limit (VSLS)</button>
+            <h3 class="px-4 pt-3 pb-1 text-xs font-bold text-gray-500 uppercase tracking-wider">Consolidated Results</h3>
+            <button data-page="summary-page" class="w-full text-left px-4 py-2.5 rounded-lg text-sm font-medium text-gray-700 nav-button">Summary & Recommendations</button>
+        </nav>
+
+        <main class="flex-1 p-4 sm:p-6 lg:p-8 main-content-area overflow-y-auto">
+            <div id="instructions-page" class="page-content bg-white p-6 rounded-xl shadow-lg">
+                <h2 class="text-3xl font-bold text-blue-700 mb-6 border-b-2 border-blue-200 pb-3">Using the SWZ Decision Support Tool</h2>
+                <div class="prose prose-sm sm:prose max-w-none text-gray-700">
+                    <p class="mb-4">This interactive web application is designed to assist Arkansas Department of Transportation (ARDOT) personnel in making informed decisions about deploying various Smart Work Zone (SWZ) systems. By systematically evaluating project-specific conditions against predefined criteria, this tool helps quantify the need for different technologies.</p>
+                    <h3 class="text-xl font-semibold mt-6 mb-3 text-blue-600">Operational Guide:</h3>
+                    <ol class="list-decimal list-inside space-y-3 pl-4">
+                        <li><strong>Understand Your Project:</strong> Before starting, ensure you have a thorough understanding of your project's scope, location, duration, traffic characteristics, known safety or operational issues, and geometric conditions.</li>
+                        <li>
+                            <strong>Evaluate Each SWZ System:</strong>
+                            <ul class="list-disc list-inside ml-5 space-y-2 mt-2">
+                                <li>Use the navigation panel to select each SWZ system module.</li>
+                                <li>Within each module, select the radio button that most accurately reflects the conditions of your specific project.</li>
+                                <li>As you make selections, the scores will update in real-time.</li>
+                            </ul>
+                        </li>
+                        <li>
+                            <strong>Review the Summary:</strong>
+                            <ul class="list-disc list-inside ml-5 space-y-2 mt-2">
+                                <li>Navigate to the "Summary & Recommendations" page.</li>
+                                <li>This page provides a consolidated table of scores and recommendations.</li>
+                                <li>Use the "Generate PDF Summary" tool to create a formal report of your evaluation.</li>
+                            </ul>
+                        </li>
+                        <li>
+                            <strong>Make an Informed Decision:</strong>
+                            <ul class="list-disc list-inside ml-5 space-y-2 mt-2">
+                                <li>The scores and recommendations are intended to support your decision-making process.</li>
+                                <li>Always combine these outputs with professional engineering judgment, ARDOT policies, and budget availability to arrive at the final decision.</li>
+                            </ul>
+                        </li>
+                    </ol>
+                </div>
+            </div>
+
+            <div id="system-evaluation-page" class="page-content hidden bg-white p-6 rounded-xl shadow-lg">
+                <h2 id="system-title" class="text-3xl font-bold text-blue-700 mb-2">System Evaluation: <span id="system-name-placeholder"></span></h2>
+                <p id="system-description-placeholder" class="text-md text-gray-600 mb-8 border-b border-gray-200 pb-4"></p>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <div class="lg:col-span-2 space-y-8" id="factors-container">
+                    </div>
+                    <div class="lg:col-span-1 space-y-6">
+                        <div class="bg-gray-50 p-5 rounded-lg shadow-md sticky top-24"> 
+                            <h3 class="text-xl font-semibold text-blue-700 mb-3">System Score</h3>
+                            <p class="text-gray-700 text-sm">Raw Score: <span id="current-system-raw-score" class="font-bold text-lg">0</span> / <span id="current-system-max-score" class="font-bold text-lg">0</span></p>
+                            <p class="text-gray-700 text-sm mb-3">Normalized Score: <span id="current-system-normalized-score" class="font-bold text-xl text-blue-600">0</span>%</p>
+                            <div class="chart-container mt-3">
+                                <canvas id="current-system-chart"></canvas>
+                            </div>
+                            <button id="reset-system-scores" class="mt-5 w-full bg-amber-500 hover:bg-amber-600 text-white font-semibold py-2.5 px-4 rounded-lg shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-amber-400 focus:ring-opacity-75">Reset Scores for this System</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="summary-page" class="page-content hidden bg-white p-6 rounded-xl shadow-lg">
+                <h2 class="text-3xl font-bold text-blue-700 mb-6 border-b-2 border-blue-200 pb-3">Summary of SWZ System Evaluations</h2>
+                <div class="overflow-x-auto mb-8 shadow-md rounded-lg">
+                    <table class="min-w-full divide-y divide-gray-200 border border-gray-300">
+                        <thead class="bg-gray-100">
+                            <tr>
+                                <th scope="col" class="px-6 py-3.5 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">SWZ System</th>
+                                <th scope="col" class="px-6 py-3.5 text-center text-sm font-semibold text-gray-700 uppercase tracking-wider">Normalized Score (%)</th>
+                                <th scope="col" class="px-6 py-3.5 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">Recommendation</th>
+                            </tr>
+                        </thead>
+                        <tbody id="summary-table-body" class="bg-white divide-y divide-gray-200">
+                        </tbody>
+                    </table>
+                </div>
+                <p class="text-sm text-gray-600 mb-6 p-3 bg-gray-50 rounded-md border border-gray-200">
+                    <strong>Recommendation Thresholds:</strong>
+                    Score ≥ 70%: <span class="font-bold text-green-600">Strongly Recommended</span>;
+                    Score 40% - 69%: <span class="font-bold text-yellow-600">Should be Considered</span>;
+                    Score < 40%: <span class="font-bold text-red-600">Probably Not Recommended</span>.
+                </p>
+                <div class="summary-chart-container bg-gray-50 p-4 rounded-lg shadow-md mb-6 border border-gray-200">
+                     <canvas id="summary-systems-chart"></canvas>
+                </div>
+                <div class="mt-8 pt-6 border-t border-gray-200">
+                    <h3 class="text-xl font-semibold text-blue-700 mb-4">Reporting & Data</h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <button id="generate-pdf-button" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-5 rounded-lg shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-75">Generate PDF Summary</button>
+                        <button id="reset-all-scores" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2.5 px-5 rounded-lg shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-75">Reset All Scores</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <footer class="bg-blue-800 text-blue-100 text-center p-5 mt-auto border-t border-blue-700">
+        <p class="text-xs">&copy; <span id="current-year"></span> Arkansas Department of Transportation. All Rights Reserved. <br> SWZ Decision Support Tool - For Internal Planning & Evaluation Purposes Only.</p>
+    </footer>
+
+<script>
+    const { jsPDF } = window.jspdf;
+
+    const swzSystems = {
+        TQDS: {
+            id: "TQDS", name: "Temporary Queue Detection System", description: "Evaluates the need for a system to detect queues and warn approaching motorists, primarily to prevent rear-end collisions.", maxPossibleScore: 145,
+            factors: [
+                { id: "TQDS-1", text: "Highway Functional Class & ADT", max: 20, options: [
+                    { text: "Interstate/High Vol Freeway (>35,000 ADT)", score: 20 }, { text: "Major Arterial/Med Vol Freeway (10,000-35,000 ADT)", score: 15 },
+                    { text: "Minor Arterial/Major Collector (3,000-10,000 ADT)", score: 10 }, { text: "Other (<3,000 ADT with known high-risk for queues)", score: 5 }, { text: "Not Applicable/Low Impact", score: 0 } ]},
+                { id: "TQDS-2", text: "Estimated Queue Length/Impact", max: 30, options: [
+                    { text: "Potential for queues >2.5 miles or significant delay (>15 min)", score: 30 }, { text: "1-2.5 miles or moderate delay (7-15 min)", score: 20 },
+                    { text: "0.5-1 mile or minor delay (3-7 min)", score: 10 }, { text: "Minimal queue expected or very short duration", score: 0 } ]},
+                { id: "TQDS-3", text: "Sight Distance at Back of Queue", max: 25, options: [
+                    { text: "Severely restricted (curves, crests, foliage, < stopping sight distance)", score: 25 }, { text: "Moderately restricted", score: 15 },
+                    { text: "Minor/Intermittent restrictions", score: 5 }, { text: "Adequate sight distance", score: 0 } ]},
+                { id: "TQDS-4", text: "Existing Traffic Issues/Crash History", max: 20, options: [
+                    { text: "Documented history of 2+ rear-end or queue-related crashes (last 3-5 yrs)", score: 20 }, { text: "Frequent non-recurring congestion or 1 known queue-related crash", score: 10 },
+                    { text: "Occasional issues reported", score: 5 }, { text: "No known issues", score: 0 } ]},
+                { id: "TQDS-5", text: "Proximity to Major Traffic Generators / Special Events", max: 15, options: [
+                    { text: "Near large event venues, major tourist routes (peak season), large industrial hubs (shift changes)", score: 15 }, { text: "Moderate or less frequent impact", score: 7 },
+                    { text: "Low/No impact", score: 0 } ]},
+                { id: "TQDS-6", text: "Alternate Route Availability & Viability", max: 10, options: [
+                    { text: "No viable alternate routes OR alternates significantly longer (>40% extra time/distance) or on lower class roads", score: 10 },
+                    { text: "Alternate routes exist but inconvenient, not well-known, or add >20% travel time", score: 5 }, { text: "Good, well-signed, and convenient alternate routes available", score: 0 } ]},
+                { id: "TQDS-7", text: "Merging/Taper Conflict or Geometric Hazards in WZ", max: 10, options: [
+                    { text: "Multiple lane merges, short tapers, challenging lane shifts, temp. signals causing abrupt stops, WZ after high-speed curve/crest", score: 10 },
+                    { text: "Standard taper/merge with potential for issues", score: 3 }, { text: "Minimal conflict", score: 0 } ]},
+                { id: "TQDS-8", text: "Project Duration & Phase Complexity", max: 10, options: [
+                    { text: "Long-term (>6 months) with multiple critical traffic shifts OR high-impact short-term project with frequent changes", score: 10 },
+                    { text: "Medium-term (1-6 months) or moderately complex phases", score: 5 }, { text: "Short-term (<1 month) simple setup", score: 0 } ]},
+                { id: "TQDS-9", text: "Upstream Interchange/Major Intersection Density", max: 5, options: [
+                    { text: "High density of interchanges/major intersections upstream (<1 mile) of WZ start, potential blockage", score: 5 },
+                    { text: "Moderate density or minor intersections", score: 2 }, { text: "Low density/no critical intersections", score: 0 } ]}
+            ]
+        },
+        TSMS: {
+            id: "TSMS", name: "Temporary Speed Monitoring System", description: "Assesses the need for systems that monitor vehicle speeds and provide feedback to drivers or data for enforcement, aiming to improve speed compliance.", maxPossibleScore: 115,
+            factors: [
+                { id: "TSMS-1", text: "Highway Functional Class & Posted Speed", max: 20, options: [
+                    { text: "Interstate/Freeway (Posted Speed ≥ 65 mph)", score: 20 }, { text: "Major Arterial/Rural Highway (Posted Speed 55-64 mph)", score: 15 },
+                    { text: "Minor Arterial/Collector (Posted Speed 45-54 mph)", score: 10 }, { text: "Lower speed urban/local roads with known speeding issues", score: 5 }, { text: "Not Applicable/Low Impact", score: 0 } ]},
+                { id: "TSMS-2", text: "Worker Exposure & Type of Work Zone", max: 25, options: [
+                    { text: "Workers directly adjacent to live traffic with minimal protection (cones/barrels, flagging)", score: 25 },
+                    { text: "Workers behind temporary barrier but close to traffic / frequent WZ access points", score: 15 },
+                    { text: "Workers well-protected/isolated from traffic", score: 5 }, { text: "No direct worker exposure", score: 0 } ]},
+                { id: "TSMS-3", text: "Documented Speeding Issues / Crash History", max: 20, options: [
+                    { text: "Documented history of speed-related crashes (run-off-road, loss of control) in project area/similar WZs", score: 20 },
+                    { text: "Traffic studies/law enforcement reports: >15% vehicles exceed WZ speed limit by 10+ mph", score: 15 },
+                    { text: "Anecdotal/observed evidence of prevalent speeding", score: 5 }, { text: "No known chronic speeding issues", score: 0 } ]},
+                { id: "TSMS-4", text: "Degree of Speed Reduction Required", max: 15, options: [
+                    { text: "Required speed reduction ≥ 20 mph from pre-WZ speed", score: 15 }, { text: "Required speed reduction 10-15 mph", score: 10 },
+                    { text: "Required speed reduction < 10 mph", score: 3 }, { text: "No speed reduction (advisory speeds only)", score: 0 } ]},
+                { id: "TSMS-5", text: "Work Zone Length & Duration", max: 10, options: [
+                    { text: "Long Work Zone (> 2 miles) OR Long Duration (> 6 months)", score: 10 }, { text: "Medium Length (0.5-2 miles) OR Medium Duration (1-6 months)", score: 5 },
+                    { text: "Short Length/Duration", score: 0 } ]},
+                { id: "TSMS-6", text: "Geometric Complexity / Hazards in WZ", max: 10, options: [
+                    { text: "Sharp curves, lane shifts, narrow lanes, temp. crossovers in WZ, hazardous at higher speeds", score: 10 },
+                    { text: "Moderate geometric challenges", score: 5 }, { text: "Simple, straight WZ layout", score: 0 } ]},
+                { id: "TSMS-7", text: "Proximity to Sensitive Areas", max: 5, options: [
+                    { text: "WZ adjacent to/near schools, residential areas, major pedestrian/cyclist activity (heightened community risk)", score: 5 },
+                    { text: "Not applicable", score: 0 } ]},
+                { id: "TSMS-8", text: "Impact from Local Traffic Generators", max: 5, options: [
+                    { text: "Near large venues (stadiums, event centers) where event traffic may exhibit aggressive driving/higher speeds", score: 5 },
+                    { text: "Moderate impact", score: 2 }, { text: "Low/No impact", score: 0 } ]},
+                { id: "TSMS-9", text: "Large Speed Variations (V85-V15)", max: 5, options: [
+                    { text: "Observed or historically high speed variance (V85-V15 > 15 mph)", score: 5 }, { text: "Moderate variance", score: 2 },
+                    { text: "Low variance", score: 0 } ]}
+            ]
+        },
+        TCEAS: {
+            id: "TCEAS", name: "Temporary Construction Equipment Alert System", description: "Evaluates the need for systems to alert motorists to construction vehicles entering/exiting the roadway or moving within the work zone.", maxPossibleScore: 90,
+            factors: [
+                { id: "TCEAS-1", text: "Frequency & Nature of Construction Vehicle Movements", max: 25, options: [
+                    { text: "High frequency of slow-moving equipment entering/exiting active high-speed travel lanes (multiple times/hour/access point) OR frequent crossing of active lanes", score: 25 },
+                    { text: "Moderate frequency or movements primarily from/to shoulder/median", score: 15 }, { text: "Low frequency/well-controlled movements", score: 5 }, { text: "Not Applicable/Low Impact", score: 0 } ]},
+                { id: "TCEAS-2", text: "Sight Distance at Equipment Access Points", max: 20, options: [
+                    { text: "Severely restricted sight distance for drivers approaching active construction access/egress points (curves, crests, vegetation, WZ setup)", score: 20 },
+                    { text: "Moderately restricted", score: 10 }, { text: "Minor restrictions", score: 5 }, { text: "Good visibility", score: 0 } ]},
+                { id: "TCEAS-3", text: "Highway Functional Class & Operating Speed", max: 15, options: [
+                    { text: "Interstate/Freeway or other roads with operating speeds ≥ 60 mph", score: 15 }, { text: "Major Arterial/Rural Highway (operating speeds 50-59 mph)", score: 10 },
+                    { text: "Minor Arterial/Collector (operating speeds 40-49 mph)", score: 5 }, { text: "Lower speed urban/local roads < 40 mph", score: 0 } ]},
+                { id: "TCEAS-4", text: "Complexity of Traffic Layout & WZ Environment", max: 10, options: [
+                    { text: "Complex WZ (lane shifts near access points, temp. diversions, narrow lanes/shoulders limiting avoidance)", score: 10 },
+                    { text: "Moderate complexity", score: 5 }, { text: "Simple WZ layout", score: 0 } ]},
+                { id: "TCEAS-5", text: "Existing Traffic Issues / Crash History", max: 10, options: [
+                    { text: "Documented history of crashes involving construction vehicles or related to unexpected entries/exits in project vicinity/similar ARDOT projects", score: 10 },
+                    { text: "General high crash rate in WZ area (not specifically equipment related)", score: 3 }, { text: "No known specific issues", score: 0 } ]},
+                { id: "TCEAS-6", text: "Percentage of Heavy Vehicles (Non-Construction)", max: 5, options: [
+                    { text: "Existing traffic stream has >15% heavy vehicles (trucks)", score: 5 }, { text: "10-15% heavy vehicles", score: 3 },
+                    { text: "<10% heavy vehicles", score: 0 } ]},
+                { id: "TCEAS-7", text: "Duration of High-Intensity Equipment Activity", max: 5, options: [
+                    { text: "Project involves >3 months of consistent, high-frequency equipment movements in/near live traffic", score: 5 },
+                    { text: "1-3 months of such activity", score: 2 }, { text: "<1 month or intermittent activity", score: 0 } ]},
+                { id: "TCEAS-8", text: "Connected Vehicle (CV) Penetration (Future Consideration, Optional)", max: 3, options: [
+                    { text: "ARDOT has active CV programs and >5% CV penetration verifiable AND equipment can transmit status", score: 3 },
+                    { text: "Low or no CV penetration / no equipment broadcast capability / Not Applicable", score: 0 } ], optional: true }
+            ]
+        },
+        TTTS: {
+            id: "TTTS", name: "Temporary Travel Time System", description: "Assesses the need for systems that provide drivers with real-time estimated travel times through or around a work zone.", maxPossibleScore: 108,
+            factors: [
+                { id: "TTTS-1", text: "Expected Level & Variability of Delay", max: 25, options: [
+                    { text: "Anticipated delays routinely >20 minutes OR highly variable delays (frequent swings 5 min to 30+ min)", score: 25 },
+                    { text: "Anticipated delays 10-20 minutes OR moderately variable", score: 15 }, { text: "Anticipated delays 5-10 minutes OR somewhat variable", score: 5 },
+                    { text: "Minimal/predictable delays <5 min", score: 0 } ]},
+                { id: "TTTS-2", text: "Highway Functional Class, ADT & Strategic Importance", max: 20, options: [
+                    { text: "Interstate (I-40, I-30) / High Vol Freeway (>30,000 ADT) OR designated Key Tourist/Event Route", score: 20 },
+                    { text: "Major Arterial / Med Vol Freeway (10,000-30,000 ADT) OR Significant Commuter Route", score: 15 },
+                    { text: "Minor Arterial / Major Collector (3,000-10,000 ADT) with known delay issues", score: 10 }, { text: "Other / Not Applicable", score: 0 } ]},
+                { id: "TTTS-3", text: "Availability & Viability of Alternate Routes", max: 20, options: [
+                    { text: "Good, well-signed, reasonably direct alternate routes available where TTTS can inform diversion", score: 20 },
+                    { text: "Alternate routes exist but less convenient/direct or not well known", score: 10 },
+                    { text: "Limited or no viable alternate routes (TTTS primarily for expectation management)", score: 5 }, { text: "Not Applicable (e.g. no significant delay expected)", score: 0 } ]},
+                { id: "TTTS-4", text: "Project Duration & Type of Work Zone", max: 15, options: [
+                    { text: "Long-term project (>6 months) with ongoing significant traffic impacts OR shorter projects with highly disruptive phases", score: 15 },
+                    { text: "Medium-term (1-6 months) with moderate impacts", score: 10 }, { text: "Short-term (<1 month) but with notable expected delays", score: 5 },
+                    { text: "Minimal impact WZ", score: 0 } ]},
+                { id: "TTTS-5", text: "Impact on Local Economy / Major Traffic Generators", max: 10, options: [
+                    { text: "WZ significantly impacts access to major employment centers, commercial districts, hospitals, universities, key tourist destinations/events", score: 10 },
+                    { text: "Moderate impact", score: 5 }, { text: "Low/No specific impact beyond general traffic", score: 0 } ]},
+                { id: "TTTS-6", text: "Existing Traffic Issues / Public Sensitivity", max: 10, options: [
+                    { text: "Documented history of frequent congestion, public complaints about delays, or high media sensitivity on this route", score: 10 },
+                    { text: "Occasional congestion or some public awareness", score: 5 }, { text: "No significant existing issues or sensitivity", score: 0 } ]},
+                { id: "TTTS-7", text: "Integration/Complement to Existing ITS", max: 5, options: [
+                    { text: "TTTS can provide data to or be logically co-located with existing ITS (DMS, IDriveArkansas, signals)", score: 5 },
+                    { text: "Standalone deployment with limited integration opportunities", score: 1 }, { text: "No integration opportunities / Not Applicable", score: 0 } ]},
+                { id: "TTTS-8", text: "Extreme Weather Impact on Travel Time", max: 3, options: [
+                    { text: "Corridor prone to sudden weather (flash floods, fog, heavy rain) significantly impacting travel times, TTTS could reflect this", score: 3 },
+                    { text: "Minimal erratic weather impact / Not Applicable", score: 0 } ]}
+            ]
+        },
+        TIDSS: {
+            id: "TIDSS", name: "Temporary Incident Detection & Surveillance System", description: "Evaluates the need for systems (e.g., cameras) to detect incidents quickly, improve situational awareness, and aid in response management.", maxPossibleScore: 103,
+            factors: [
+                { id: "TIDSS-1", text: "Highway Functional Class, ADT & Strategic Importance", max: 20, options: [
+                    { text: "Interstate/High Vol Freeway (>30,000 ADT) OR route with historically long incident clearance times", score: 20 },
+                    { text: "Major Arterial/Med Vol Freeway (10,000-30,000 ADT) OR designated critical freight/evacuation route", score: 15 },
+                    { text: "Minor Arterial/Major Collector (3,000-10,000 ADT) with known safety/incident concerns", score: 10 }, { text: "Other / Not Applicable", score: 0 } ]},
+                { id: "TIDSS-2", text: "Likelihood & Consequence of Incidents / Crash History", max: 20, options: [
+                    { text: "Documented high crash rate (esp. secondary, injury/fatal) OR frequent non-recurring congestion due to incidents", score: 20 },
+                    { text: "Moderate crash rate or history of significant but less frequent incidents", score: 10 },
+                    { text: "Corridor prone to weather-related incidents (fog, localized ice)", score: 5 }, { text: "Low incident history", score: 0 } ]},
+                { id: "TIDSS-3", text: "Geometric Complexity & Sight Distance Limitations within WZ", max: 20, options: [
+                    { text: "Complex WZ layout (crossovers, shifts, narrow lanes) AND/OR significantly restricted sight distances (curves, crests, barriers)", score: 20 },
+                    { text: "Moderate complexity OR some sight distance issues", score: 10 }, { text: "Simple layout with good visibility", score: 0 } ]},
+                { id: "TIDSS-4", text: "Emergency Responder Access & Response Time Challenges", max: 15, options: [
+                    { text: "Known constraints on emergency vehicle access to/through WZ OR average response times for area above desired thresholds", score: 15 },
+                    { text: "Potential for access constraints or moderate response times", score: 7 }, { text: "Good access and typically rapid response", score: 0 } ]},
+                { id: "TIDSS-5", text: "Worker Safety & Work Zone Security Considerations", max: 10, options: [
+                    { text: "High worker exposure to live traffic OR WZ has specific security concerns (theft, vandalism, unauthorized entry) surveillance could mitigate", score: 10 },
+                    { text: "Moderate worker exposure or general security needs", score: 5 }, { text: "Minimal exposure/security concerns", score: 0 } ]},
+                { id: "TIDSS-6", text: "Project Duration & Criticality of Phases", max: 10, options: [
+                    { text: "Long-term project (>6 months) OR project with multiple, extended critical phases requiring high operational reliability", score: 10 },
+                    { text: "Medium-term (1-6 months) OR fewer critical phases", score: 5 }, { text: "Short-term (<1 month) project", score: 0 } ]},
+                { id: "TIDSS-7", text: "Need for Traffic Condition Verification & Management", max: 5, options: [
+                    { text: "Frequent need for verification of reported traffic conditions (TMC ops, public info, dynamic queue/diversion management)", score: 5 },
+                    { text: "Occasional need for verification", score: 2 }, { text: "Minimal need", score: 0 } ]},
+                { id: "TIDSS-8", text: "Adjacent/Consecutive Projects", max: 3, options: [
+                    { text: "WZ is part of a series of adjacent/consecutive projects, increasing overall corridor disruption and incident likelihood", score: 3 },
+                    { text: "Not applicable or standalone project", score: 0 } ]}
+            ]
+        },
+        TOHWS: {
+            id: "TOHWS", name: "Temporary Over-height Vehicle Warning System", description: "Assesses the need for systems to detect and warn over-height vehicles approaching a temporary low-clearance structure.", maxPossibleScore: 100,
+            factors: [
+                { id: "TOHWS-1", text: "Presence of Temporary Reduced Vertical Clearance Below Critical Threshold", max: 60, options: [
+                    { text: "Temporary vertical clearance below ARDOT legal minimum OR below typical height of known permitted loads on route", score: 60 },
+                    { text: "Temporary clearance above legal minimum but below normal permanent clearance AND on route with frequent over-height permit loads", score: 30 },
+                    { text: "No temporary reduced vertical clearance below critical threshold", score: 0 } ]},
+                { id: "TOHWS-2", text: "Availability of a Safe Egress/Diversion Route Before Hazard", max: 20, options: [
+                    { text: "Clearly marked, safe egress point (ramp, turnaround, suitable side road) exists between warning and low clearance", score: 20 },
+                    { text: "Limited or less ideal egress options exist", score: 5 },
+                    { text: "No safe/practical egress before hazard (warning only, diversion ineffective)", score: 0 } ]},
+                { id: "TOHWS-3", text: "Potential Consequences of an Over-height Vehicle Impact", max: 15, options: [
+                    { text: "High consequences (critical structural damage, extended full closure, significant safety risk, major project delay >1 week)", score: 15 },
+                    { text: "Moderate consequences (notable damage, partial/short-term closure, moderate project delay)", score: 7 },
+                    { text: "Low consequences", score: 0 } ]},
+                { id: "TOHWS-4", text: "Volume of Truck Traffic / Known Over-height Load Frequency", max: 5, options: [
+                    { text: "Route carries high volume of truck traffic (>25% ADTT) OR designated route for frequent over-height permitted loads", score: 5 },
+                    { text: "Moderate truck traffic (10-25% ADTT) or occasional over-height loads", score: 2 }, { text: "Low truck traffic / Not Applicable", score: 0 } ]},
+                { id: "TOHWS-5", text: "Inadequacy of Standard Signage Alone (Optional Engineering Judgment)", max: 5, options: [
+                    { text: "Standard static low-clearance signage deemed insufficient (approach geometry, driver expectancy, high speeds, complex visual environment)", score: 5 },
+                    { text: "Standard signage likely adequate / Not Applicable", score: 0 } ], optional: true }
+            ]
+        },
+        DLMS: {
+            id: "DLMS", name: "Dynamic Lane Merge System", description: "Evaluates the need for systems that encourage motorists to use all available lanes up to the merge point during congestion (zipper merge).", maxPossibleScore: 110,
+            factors: [
+                { id: "DLMS-1", text: "Traffic Demand & Congestion Levels", max: 30, options: [
+                    { text: "Lane closure on facility where PHV/open lane >1000-1200 vphpl OR routine queuing >0.5 mile anticipated", score: 30 },
+                    { text: "PHV 750-1000 vphpl OR occasional moderate queues expected", score: 15 }, { text: "Lower volumes/minimal queue impact", score: 0 } ]},
+                { id: "DLMS-2", text: "Roadway Type & Number of Lanes", max: 25, options: [
+                    { text: "Multi-lane divided highway (Interstate, Freeway, 4+ lane divided) reducing by at least one lane", score: 25 },
+                    { text: "Not applicable (e.g., 2-lane road, no lane reduction)", score: 0 } ]},
+                { id: "DLMS-3", text: "Duration of Lane Closure", max: 20, options: [
+                    { text: "Lane closure continuous or extended periods daily for > 4 weeks", score: 20 },
+                    { text: "Closure for 1-4 weeks OR highly repetitive shorter closures (daily for a week)", score: 10 },
+                    { text: "Intermittent/very short-term closures (<1 week total)", score: 0 } ]},
+                { id: "DLMS-4", text: "Anticipated Reduction in Queue Length / Delay", max: 15, options: [
+                    { text: "Analysis/experience suggests DLM could reduce typical queue lengths by >25% or significantly improve travel time reliability", score: 15 },
+                    { text: "Potential for moderate queue reduction (10-25%)", score: 7 }, { text: "Minor or uncertain benefit", score: 0 } ]},
+                { id: "DLMS-5", text: "Upstream/Downstream Impacts & Interchange Density", max: 10, options: [
+                    { text: "Lane closure/queue frequently impacts upstream/downstream interchange ramps, major intersections, critical access points", score: 10 },
+                    { text: "Some potential for ramp/intersection impacts", score: 5 }, { text: "Minimal interaction with other critical junctions", score: 0 } ]},
+                { id: "DLMS-6", text: "Public Information & Education Feasibility", max: 5, options: [
+                    { text: "Project allows for coordinated public information campaign (ARDOT channels, media, project outreach) to explain DLM", score: 5 },
+                    { text: "Limited opportunity for specific outreach", score: 0 } ]},
+                { id: "DLMS-7", text: "Safety Benefits (Reduced Aggressive Merging / Speed Differentials)", max: 5, options: [
+                    { text: "WZ type/location has history of, or high potential for, aggressive merging, sideswipes, or rear-ends related to early merging queues", score: 5 },
+                    { text: "Moderate potential for such safety issues", score: 2 }, { text: "Low potential", score: 0 } ]}
+            ]
+        },
+        VSLS: {
+            id: "VSLS", name: "Variable Speed Limit System", description: "Assesses the need for systems that dynamically adjust speed limits based on real-time traffic, weather, or work zone conditions.", maxPossibleScore: 108,
+            factors: [
+                { id: "VSLS-1", text: "Crash History & Type (Speed, Weather, or Queue-Related)", max: 25, options: [
+                    { text: "Documented history of significant speed-related, weather-related (rain, fog, ice), or secondary (queue-related) crashes VSL could mitigate", score: 25 },
+                    { text: "Moderate history or strong potential based on similar sites", score: 15 }, { text: "Some potential but limited historical data", score: 5 },
+                    { text: "Low crash history of these types", score: 0 } ]},
+                { id: "VSLS-2", text: "Recurring Congestion & Queue Formation", max: 20, options: [
+                    { text: "Facility experiences regular, predictable periods of heavy congestion leading to significant queue formation and speed differentials", score: 20 },
+                    { text: "Experiences occasional or less predictable congestion with notable speed variations", score: 10 },
+                    { text: "Infrequent or minor congestion", score: 0 } ]},
+                { id: "VSLS-3", text: "Frequency of Adverse Weather Affecting Speeds/Safety", max: 20, options: [
+                    { text: "Location prone to frequent adverse weather (dense fog, heavy rain, ice, snow) significantly impacting safe operating speeds/visibility", score: 20 },
+                    { text: "Occasional adverse weather events impacting safety", score: 10 }, { text: "Infrequent or minor weather impacts", score: 0 } ]},
+                { id: "VSLS-4", text: "Work Zone Characteristics (If Applicable for Temporary VSL)", max: 15, options: [
+                    { text: "For WZ: Active worker presence with high exposure, frequent changes in traffic patterns, lane closures on high-speed roads, or dynamic queue presence", score: 15 },
+                    { text: "WZ with moderate hazards or some worker exposure", score: 7 }, { text: "Static WZ with minimal dynamic risks / Not for WZ", score: 0 } ]},
+                { id: "VSLS-5", text: "Roadway Functional Class & Operating Speeds", max: 10, options: [
+                    { text: "Interstate/Freeway or other high-speed multi-lane facility (Posted Speed ≥ 60 mph)", score: 10 },
+                    { text: "Major Arterial (Posted Speed 50-59 mph) with documented speed variance issues", score: 5 }, { text: "Other facilities / Not Applicable", score: 0 } ]},
+                { id: "VSLS-6", text: "Availability of Supporting ITS Infrastructure & Data", max: 10, options: [
+                    { text: "Real-time traffic data (speed, volume, occupancy) AND/OR weather data (visibility, precipitation, road surface from RWIS) readily available and integrable", score: 10 },
+                    { text: "Some data available but requires significant integration effort or new sensor deployment", score: 3 },
+                    { text: "Limited or no real-time data sources", score: 0 } ]},
+                { id: "VSLS-7", text: "Potential for Speed Harmonization & Reduced Speed Variance", max: 5, options: [
+                    { text: "Engineering judgment: high potential for VSL to reduce speed variance (heavy merging/weaving, upstream of bottlenecks)", score: 5 },
+                    { text: "Moderate potential for harmonization", score: 2 }, { text: "Low potential", score: 0 } ]},
+                { id: "VSLS-8", text: "Upstream/Downstream Coordination Potential", max: 3, options: [
+                    { text: "Opportunity to coordinate VSL with other traffic management strategies (ramp metering, DMS, TQDS, DLM) or across jurisdictions", score: 3 },
+                    { text: "Limited coordination opportunities", score: 0 } ]}
+            ]
+        }
+    };
+
+    let currentPage = 'instructions-page';
+    let currentSystemId = null;
+    let systemScores = {};
+    let activeSystemChart = null; 
+    let summaryChartInstance = null;
+
+    const pageContents = document.querySelectorAll('.page-content');
+    const navButtons = document.querySelectorAll('.nav-button');
+    const factorsContainer = document.getElementById('factors-container');
+    const systemNamePlaceholder = document.getElementById('system-name-placeholder');
+    const systemDescriptionPlaceholder = document.getElementById('system-description-placeholder');
+    const currentSystemRawScoreEl = document.getElementById('current-system-raw-score');
+    const currentSystemMaxScoreEl = document.getElementById('current-system-max-score');
+    const currentSystemNormalizedScoreEl = document.getElementById('current-system-normalized-score');
+    const summaryTableBody = document.getElementById('summary-table-body');
+    const mobileMenuButton = document.getElementById('mobile-menu-button');
+    const mainNav = document.getElementById('main-nav');
+    const resetSystemScoresButton = document.getElementById('reset-system-scores');
+    const resetAllScoresButton = document.getElementById('reset-all-scores');
+    const pdfButton = document.getElementById('generate-pdf-button');
+    
+
+    document.addEventListener('DOMContentLoaded', () => {
+        initializeScores();
+        navigateToPage('instructions-page');
+        updateSummaryTable(); 
+        renderSummaryChart(); 
+        
+        navButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const pageId = button.dataset.page;
+                currentSystemId = button.dataset.system || null;
+                navigateToPage(pageId, currentSystemId);
+                if (mainNav.classList.contains('sm:block') === false && !mainNav.classList.contains('hidden')) {
+                    mainNav.classList.add('hidden');
+                }
+            });
+        });
+
+        mobileMenuButton.addEventListener('click', () => {
+            mainNav.classList.toggle('hidden');
+            mainNav.classList.toggle('block');
+        });
+        
+        document.getElementById('current-year').textContent = new Date().getFullYear();
+
+        if(resetSystemScoresButton) {
+            resetSystemScoresButton.addEventListener('click', handleResetSystemScores);
+        }
+        if(resetAllScoresButton) {
+            resetAllScoresButton.addEventListener('click', handleResetAllScores);
+        }
+        if(pdfButton) {
+            pdfButton.addEventListener('click', handleGeneratePdf);
+        }
+    });
+
+    function initializeScores() {
+        Object.keys(swzSystems).forEach(sysId => {
+            systemScores[sysId] = {};
+            swzSystems[sysId].factors.forEach(factor => {
+                const savedScore = localStorage.getItem(`${sysId}-${factor.id}`);
+                systemScores[sysId][factor.id] = savedScore !== null ? parseInt(savedScore, 10) : 0;
+            });
+        });
+    }
+    
+    function saveScore(systemId, factorId, score) {
+        localStorage.setItem(`${systemId}-${factorId}`, score);
+    }
+
+    function clearSystemScoresFromStorage(systemId) {
+        swzSystems[systemId].factors.forEach(factor => {
+            localStorage.removeItem(`${systemId}-${factor.id}`);
+        });
+    }
+
+    function clearAllScoresFromStorage() {
+         Object.keys(swzSystems).forEach(sysId => {
+            clearSystemScoresFromStorage(sysId);
+        });
+    }
+
+    function handleResetSystemScores() {
+        const systemToResetId = currentSystemId; 
+        if (systemToResetId && swzSystems[systemToResetId] && confirm(`Are you sure you want to reset scores for ${swzSystems[systemToResetId].name}? This action cannot be undone.`)) {
+            clearSystemScoresFromStorage(systemToResetId);
+            
+            systemScores[systemToResetId] = {}; 
+            swzSystems[systemToResetId].factors.forEach(factor => {
+                 systemScores[systemToResetId][factor.id] = 0; 
+            });
+            
+            if (currentPage === 'system-evaluation-page' && currentSystemId === systemToResetId) {
+                renderSystemEvaluationPage(systemToResetId); 
+            }
+            
+            updateSummaryTable(); 
+            renderSummaryChart(); 
+        }
+    }
+
+    function handleResetAllScores() {
+        if (confirm("Are you sure you want to reset ALL scores for ALL systems? This action cannot be undone.")) {
+            clearAllScoresFromStorage();
+            initializeScores(); 
+            
+            if (currentPage === 'system-evaluation-page' && currentSystemId) {
+                renderSystemEvaluationPage(currentSystemId); 
+            }
+            updateSummaryTable(); 
+            renderSummaryChart(); 
+        }
+    }
+
+    function handleGeneratePdf() {
+        const doc = new jsPDF();
+        
+        doc.setFontSize(18);
+        doc.setTextColor("#0369a1");
+        doc.text("ARDOT SWZ Decision Support Tool - Summary Report", 14, 22);
+
+        doc.setFontSize(11);
+        doc.setTextColor("#1f2937");
+        doc.text(`Report Generated: ${new Date().toLocaleDateString()}`, 14, 30);
+        
+        const tableData = [];
+        Object.keys(swzSystems).forEach(sysId => {
+            const system = swzSystems[sysId];
+            const scores = calculateScores(sysId);
+            const recommendation = getRecommendation(scores.normalizedScore);
+            tableData.push([
+                system.name,
+                `${scores.normalizedScore}%`,
+                recommendation.text
+            ]);
+        });
+
+        doc.autoTable({
+            startY: 40,
+            head: [['SWZ System', 'Normalized Score (%)', 'Recommendation']],
+            body: tableData,
+            theme: 'striped',
+            headStyles: { fillColor: [3, 105, 161] } // ARDOT Blue
+        });
+
+        const lastTableY = doc.lastAutoTable.finalY;
+
+        const canvas = document.getElementById('summary-systems-chart');
+        const originalBg = canvas.style.backgroundColor;
+        canvas.style.backgroundColor = 'white';
+        summaryChartInstance.options.animation = false;
+        summaryChartInstance.update();
+
+        const imgData = canvas.toDataURL('image/png');
+        
+        summaryChartInstance.options.animation = true;
+        summaryChartInstance.update();
+        canvas.style.backgroundColor = originalBg;
+        
+        const imgWidth = 180;
+        const imgHeight = (canvas.height * imgWidth) / canvas.width;
+        
+        doc.addImage(imgData, 'PNG', 15, lastTableY + 15, imgWidth, imgHeight);
+
+        const date = new Date().toISOString().slice(0, 10);
+        doc.save(`ARDOT_SWZ_Summary_${date}.pdf`);
+    }
+
+    function navigateToPage(pageId, systemId = null) {
+        currentPage = pageId;
+        pageContents.forEach(page => page.classList.add('hidden'));
+        document.getElementById(pageId).classList.remove('hidden');
+
+        navButtons.forEach(btn => {
+            btn.classList.remove('active'); 
+            if (btn.dataset.page === pageId && (pageId !== 'system-evaluation-page' || btn.dataset.system === systemId)) {
+                btn.classList.add('active');
+            }
+        });
+
+        if (pageId === 'system-evaluation-page' && systemId) {
+            currentSystemId = systemId;
+            renderSystemEvaluationPage(systemId);
+        } else if (pageId === 'summary-page') {
+            updateSummaryTable();
+            renderSummaryChart();
+        }
+    }
+
+    function renderSystemEvaluationPage(systemId) {
+        const system = swzSystems[systemId];
+        if (!system) return;
+
+        systemNamePlaceholder.textContent = system.name;
+        systemDescriptionPlaceholder.textContent = system.description;
+        factorsContainer.innerHTML = '';
+
+        system.factors.forEach(factor => {
+            const factorEl = document.createElement('div');
+            factorEl.className = 'p-5 border border-gray-200 rounded-lg shadow-sm bg-gray-50';
+            
+            let optionsHTML = `<fieldset><legend class="block text-md font-semibold text-gray-800 mb-2">${factor.text} ${factor.optional ? '<span class="text-xs text-amber-700">(Optional)</span>' : ''}</legend> <div class="mt-2 space-y-2.5">`;
+            
+            const currentFactorScore = systemScores[systemId][factor.id];
+
+            factor.options.forEach((option, index) => {
+                const optionId = `${factor.id}-option-${index}`;
+                const isChecked = option.score === currentFactorScore;
+                optionsHTML += `
+                    <label for="${optionId}" class="factor-option flex items-center p-3 border border-gray-300 rounded-md hover:border-blue-400 hover:shadow-sm cursor-pointer transition-all duration-150 ${isChecked ? 'bg-blue-100 border-blue-500 ring-2 ring-blue-500' : 'bg-white'}">
+                        <input type="radio" id="${optionId}" name="${factor.id}" value="${option.score}" ${isChecked ? 'checked' : ''}
+                               class="focus:ring-blue-500 h-4 w-4 text-blue-600 border-gray-300">
+                        <span class="ml-3 text-sm text-gray-700">${option.text} <span class="font-semibold text-blue-600">(${option.score} pts)</span></span>
+                    </label>
+                `;
+            });
+            optionsHTML += `</div></fieldset>`;
+            factorEl.innerHTML = optionsHTML;
+            factorsContainer.appendChild(factorEl);
+
+            const radioButtons = factorEl.querySelectorAll(`input[name="${factor.id}"]`);
+            radioButtons.forEach(radio => {
+                radio.addEventListener('change', (e) => {
+                    systemScores[systemId][factor.id] = parseInt(e.target.value, 10);
+                    saveScore(systemId, factor.id, parseInt(e.target.value, 10));
+                    updateSystemScoresDisplay(systemId);
+                    radioButtons.forEach(rb => {
+                        rb.closest('label').classList.remove('bg-blue-100', 'border-blue-500', 'ring-2', 'ring-blue-500');
+                        rb.closest('label').classList.add('bg-white');
+                    });
+                    e.target.closest('label').classList.add('bg-blue-100', 'border-blue-500', 'ring-2', 'ring-blue-500');
+                    e.target.closest('label').classList.remove('bg-white');
+                });
+            });
+        });
+        updateSystemScoresDisplay(systemId);
+    }
+
+    function calculateScores(systemId) {
+        const system = swzSystems[systemId];
+        let rawScore = 0;
+        system.factors.forEach(factor => {
+            rawScore += systemScores[systemId][factor.id] || 0;
+        });
+        const normalizedScore = system.maxPossibleScore > 0 ? Math.round((rawScore / system.maxPossibleScore) * 100) : 0;
+        return { rawScore, normalizedScore, maxPossible: system.maxPossibleScore };
+    }
+
+    function updateSystemScoresDisplay(systemId) {
+        const scores = calculateScores(systemId);
+        currentSystemRawScoreEl.textContent = scores.rawScore;
+        currentSystemMaxScoreEl.textContent = scores.maxPossible;
+        currentSystemNormalizedScoreEl.textContent = scores.normalizedScore;
+        renderCurrentSystemChart(systemId, scores.normalizedScore);
+    }
+    
+    function updateSummaryTable() {
+        summaryTableBody.innerHTML = ''; 
+        Object.keys(swzSystems).forEach(sysId => {
+            const system = swzSystems[sysId];
+            const scores = calculateScores(sysId);
+            const recommendation = getRecommendation(scores.normalizedScore);
+
+            const row = summaryTableBody.insertRow();
+            row.innerHTML = `
+                <td class="px-6 py-4 whitespace-normal text-sm font-medium text-gray-900">${system.name} (${sysId})</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 text-center">${scores.normalizedScore}%</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold ${recommendation.colorClass}">${recommendation.text}</td>
+            `;
+        });
+    }
+
+    function getRecommendation(normalizedScore) {
+        if (normalizedScore >= 70) return { text: "Strongly Recommended", colorClass: "text-green-600" };
+        if (normalizedScore >= 40) return { text: "Should be Considered", colorClass: "text-yellow-600" };
+        return { text: "Not Recommended", colorClass: "text-red-600" };
+    }
+
+
+    function renderCurrentSystemChart(systemId, normalizedScore) {
+        const canvasEl = document.getElementById('current-system-chart');
+        if (!canvasEl) return;
+        const ctx = canvasEl.getContext('2d');
+
+        if (activeSystemChart) { 
+            activeSystemChart.destroy();
+            activeSystemChart = null; 
+        }
+
+        activeSystemChart = new Chart(ctx, { 
+            type: 'doughnut',
+            data: {
+                labels: ['Normalized Score', 'Remaining'],
+                datasets: [{
+                    data: [normalizedScore, Math.max(0, 100 - normalizedScore)],
+                    backgroundColor: ['#2563eb', '#e5e7eb'], 
+                    borderColor: ['#2563eb', '#e5e7eb'],
+                    borderWidth: 1,
+                    circumference: 180, 
+                    rotation: 270      
+                }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false, cutout: '70%',
+                plugins: {
+                    legend: { display: false }, tooltip: { enabled: false },
+                    title: { 
+                        display: true, 
+                        text: `${normalizedScore}%`, 
+                        position: 'top', 
+                        align: 'center', 
+                        font: { 
+                            size: 14, 
+                            weight: 'bold' 
+                        }, 
+                        color: '#2563eb', 
+                        padding: { 
+                            top: 70 
+                        } 
+                    }
+                },
+                animation: { animateScale: true, animateRotate: true }
+            }
+        });
+    }
+
+    function renderSummaryChart() {
+        const canvasEl = document.getElementById('summary-systems-chart');
+        if(!canvasEl) return;
+        const ctx = canvasEl.getContext('2d');
+        const labels = [];
+        const data = [];
+        const backgroundColors = [];
+
+        Object.keys(swzSystems).forEach(sysId => {
+            labels.push(swzSystems[sysId].id);
+            const scores = calculateScores(sysId);
+            data.push(scores.normalizedScore);
+            if (scores.normalizedScore >= 70) backgroundColors.push('rgba(22, 163, 74, 0.8)'); 
+            else if (scores.normalizedScore >= 40) backgroundColors.push('rgba(234, 179, 8, 0.8)'); 
+            else backgroundColors.push('rgba(220, 38, 38, 0.8)'); 
+        });
+
+        if (summaryChartInstance) {
+            summaryChartInstance.destroy();
+        }
+
+        summaryChartInstance = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Normalized Score (%)', data: data, backgroundColor: backgroundColors,
+                    borderColor: backgroundColors.map(color => color.replace('0.8', '1')), borderWidth: 1
+                }]
+            },
+            options: {
+                indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+                scales: {
+                    x: { beginAtZero: true, max: 100, title: { display: true, text: 'Normalized Score (%)', font: {size: 12, weight: '500'} }, grid: { color: '#e5e7eb'} },
+                    y: { ticks: { autoSkip: false, font: {size: 10} }, grid: { display: false } }
+                },
+                plugins: {
+                    legend: { display: false },
+                    title: { display: true, text: 'SWZ Systems Normalized Score Comparison', font: {size: 16, weight: '600'}, padding: {bottom: 15} },
+                    tooltip: { 
+                        backgroundColor: '#1f2937', 
+                        titleFont: { weight: 'bold'},
+                        bodyFont: { size: 12 },
+                        callbacks: { label: function(context) { return `${context.dataset.label}: ${context.raw}%`; } } 
+                    }
+                }
+            }
+        });
+    }
+</script>
+</body>
+</html>
