@@ -10,12 +10,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
 
     <!-- Chosen Palette: Official Blue (header/accents), Light Neutrals (backgrounds), Dark Text. -->
-    <!-- Application Structure Plan: Single-page application with tab-like navigation. Added Generate PDF Summary functionality to the Summary page for reporting. -->
-    <!-- Visualization & Content Choices:
-        - All previous choices remain.
-        - PDF Generation: Uses jsPDF to create a formal report including a title, date, a summary table generated using jsPDF-AutoTable, and an image of the summary chart canvas. This provides a portable and professional output of the user's evaluation.
-        - CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. Gemini API features removed. Import/Export removed. -->
-
+    
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -32,7 +27,7 @@
         .factor-option:hover { background-color: #e0f2fe; }
         .nav-button.active { background-color: #0369a1; color: white; }
         .nav-button:hover:not(.active) { background-color: #e0f2fe; color: #0369a1; }
-        .ardot-r-style { font-size: 0.85em; position: relative; top: -0.05em; }
+        .ardot-r-style { font-size: 0.8em; position: relative; top: -0.05em; } /* Smaller R */
     </style>
 </head>
 <body class="flex flex-col min-h-screen">
@@ -41,7 +36,7 @@
         <div class="container mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex items-center justify-between h-16">
                 <div class="flex items-center">
-                    <img src="image_14d4fb.png" alt="ARDOT Logo" class="h-10 mr-3" onerror="this.onerror=null; this.src='https://placehold.co/120x40/FFFFFF/022047?text=LOGO&font=arial'; this.alt='ARDOT Logo Placeholder';">
+                    <img src="image_14d4fb.png" alt="ARDOT Logo" class="h-10 mr-3" onerror="this.onerror=null; this.src='https://placehold.co/120x40/FFFFFF/022047?text=LOGO&font=arial';">
                     <h1 class="text-xl sm:text-2xl font-semibold">
                         A<span class="ardot-r-style">R</span>DOT SWZ Decision Support Tool
                     </h1>
@@ -56,84 +51,138 @@
     </header>
 
     <div class="container mx-auto flex flex-col sm:flex-row flex-1">
-        <nav id="main-nav" class="w-full sm:w-72 bg-white sm:shadow-md p-4 space-y-1.5 hidden sm:block flex-shrink-0 sm:sticky sm:top-16 self-start" style="max-height: calc(100vh - 64px); overflow-y: auto;">
+        <!-- Navigation Menu -->
+        <nav id="main-nav" class="w-full sm:w-80 bg-white sm:shadow-md p-4 space-y-1.5 hidden sm:block flex-shrink-0 sm:sticky sm:top-16 self-start overflow-y-auto" style="max-height: calc(100vh - 64px);">
             <button data-page="instructions-page" class="w-full text-left px-4 py-2.5 rounded-lg text-sm font-medium text-gray-700 nav-button">Instructions & About</button>
-            <h3 class="px-4 pt-3 pb-1 text-xs font-bold text-gray-500 uppercase tracking-wider">SWZ Systems Evaluation</h3>
-            <button data-page="system-evaluation-page" data-system="TQDS" class="w-full text-left px-4 py-2.5 rounded-lg text-sm font-medium text-gray-700 nav-button">1. Queue Detection (TQDS)</button>
-            <button data-page="system-evaluation-page" data-system="TSMS" class="w-full text-left px-4 py-2.5 rounded-lg text-sm font-medium text-gray-700 nav-button">2. Speed Monitoring (TSMS)</button>
-            <button data-page="system-evaluation-page" data-system="TCEAS" class="w-full text-left px-4 py-2.5 rounded-lg text-sm font-medium text-gray-700 nav-button">3. Equipment Alert (TCEAS)</button>
-            <button data-page="system-evaluation-page" data-system="TTTS" class="w-full text-left px-4 py-2.5 rounded-lg text-sm font-medium text-gray-700 nav-button">4. Travel Time (TTTS)</button>
-            <button data-page="system-evaluation-page" data-system="TIDSS" class="w-full text-left px-4 py-2.5 rounded-lg text-sm font-medium text-gray-700 nav-button">5. Incident Detection (TIDSS)</button>
-            <button data-page="system-evaluation-page" data-system="TOHWS" class="w-full text-left px-4 py-2.5 rounded-lg text-sm font-medium text-gray-700 nav-button">6. Over-height Warning (TOHWS)</button>
-            <button data-page="system-evaluation-page" data-system="DLMS" class="w-full text-left px-4 py-2.5 rounded-lg text-sm font-medium text-gray-700 nav-button">7. Dynamic Lane Merge (DLMS)</button>
-            <button data-page="system-evaluation-page" data-system="VSLS" class="w-full text-left px-4 py-2.5 rounded-lg text-sm font-medium text-gray-700 nav-button">8. Variable Speed Limit (VSLS)</button>
+            
+            <h3 class="px-4 pt-3 pb-1 text-xs font-bold text-gray-500 uppercase tracking-wider">Evaluation</h3>
+            <button data-page="evaluate-all-page" class="w-full text-left px-4 py-2.5 rounded-lg text-sm font-medium text-gray-700 nav-button border-l-4 border-transparent hover:border-blue-500">Evaluate All Systems</button>
+            
+            <h3 class="px-4 pt-3 pb-1 text-xs font-bold text-gray-500 uppercase tracking-wider">Individual Systems</h3>
+            <button data-page="system-evaluation-page" data-system="TQDS" class="w-full text-left px-4 py-2.5 rounded-lg text-sm font-medium text-gray-700 nav-button">1. Queue Warning System</button>
+            <button data-page="system-evaluation-page" data-system="TSMS" class="w-full text-left px-4 py-2.5 rounded-lg text-sm font-medium text-gray-700 nav-button">2. Dynamic Speed Feedback Sign</button>
+            <button data-page="system-evaluation-page" data-system="TCEAS" class="w-full text-left px-4 py-2.5 rounded-lg text-sm font-medium text-gray-700 nav-button">3. Construction Equipment Alert System</button>
+            <button data-page="system-evaluation-page" data-system="TTTS" class="w-full text-left px-4 py-2.5 rounded-lg text-sm font-medium text-gray-700 nav-button">4. Real-time Traveler Information System</button>
+            <button data-page="system-evaluation-page" data-system="TIDSS" class="w-full text-left px-4 py-2.5 rounded-lg text-sm font-medium text-gray-700 nav-button">5. Incident Management System</button>
+            <button data-page="system-evaluation-page" data-system="TOHWS" class="w-full text-left px-4 py-2.5 rounded-lg text-sm font-medium text-gray-700 nav-button">6. Over-height Vehicle Warning System</button>
+            <button data-page="system-evaluation-page" data-system="DLMS" class="w-full text-left px-4 py-2.5 rounded-lg text-sm font-medium text-gray-700 nav-button">7. Dynamic Lane Merge System</button>
+            <button data-page="system-evaluation-page" data-system="VSLS" class="w-full text-left px-4 py-2.5 rounded-lg text-sm font-medium text-gray-700 nav-button">8. Variable Speed Limit System</button>
+            
             <h3 class="px-4 pt-3 pb-1 text-xs font-bold text-gray-500 uppercase tracking-wider">Consolidated Results</h3>
             <button data-page="summary-page" class="w-full text-left px-4 py-2.5 rounded-lg text-sm font-medium text-gray-700 nav-button">Summary & Recommendations</button>
         </nav>
 
         <main class="flex-1 p-4 sm:p-6 lg:p-8 main-content-area overflow-y-auto">
+            <!-- Instructions Page -->
             <div id="instructions-page" class="page-content bg-white p-6 rounded-xl shadow-lg">
-                <h2 class="text-3xl font-bold text-blue-700 mb-6 border-b-2 border-blue-200 pb-3">Using the SWZ Decision Support Tool</h2>
+                <h2 class="text-3xl font-bold text-blue-700 mb-6 border-b-2 border-blue-200 pb-3">Using the A<span class="ardot-r-style">R</span>DOT SWZ Decision Support Tool</h2>
+                
                 <div class="prose prose-sm sm:prose max-w-none text-gray-700">
-                    <p class="mb-4">This interactive web application is designed to assist Arkansas Department of Transportation (ARDOT) personnel in making informed decisions about deploying various Smart Work Zone (SWZ) systems. By systematically evaluating project-specific conditions against predefined criteria, this tool helps quantify the need for different technologies.</p>
+                    <p class="mb-4">This interactive web application is designed to assist Arkansas Department of Transportation (A<span class="ardot-r-style">R</span>DOT) personnel in making informed decisions about deploying various Smart Work Zone (SWZ) systems. By systematically evaluating project-specific conditions against predefined criteria, this tool helps quantify the need for different technologies.</p>
+                    
+                    <!-- Project Details Section -->
+                    <div class="bg-gray-50 p-5 rounded-lg border border-gray-200 mb-6 shadow-sm">
+                        <h3 class="text-lg font-bold text-blue-800 mb-3">Project Information</h3>
+                        <div class="grid grid-cols-1 gap-4">
+                            <div>
+                                <label for="project-name-input" class="block text-sm font-medium text-gray-700 mb-1">Project Name / ID</label>
+                                <input type="text" id="project-name-input" class="w-full p-2 border border-gray-300 rounded focus:ring-blue-500 focus:border-blue-500" placeholder="e.g., Job 012345 - I-40 Rehab">
+                            </div>
+                            <div>
+                                <label for="project-desc-input" class="block text-sm font-medium text-gray-700 mb-1">Project Details / Notes</label>
+                                <textarea id="project-desc-input" rows="3" class="w-full p-2 border border-gray-300 rounded focus:ring-blue-500 focus:border-blue-500" placeholder="Brief description of the work zone..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-blue-50 p-4 rounded-lg border border-blue-100 mb-6">
+                         <h4 class="font-bold text-blue-800 mb-2">Quick Start</h4>
+                         <p class="text-sm mb-3">Use the navigation menu to evaluate systems individually, or use the "Evaluate All Systems" feature to see all factors in a single view.</p>
+                         <button id="landing-reset-button" class="bg-white border border-red-300 text-red-600 hover:bg-red-50 font-semibold py-2 px-4 rounded shadow-sm text-sm transition-colors">Start Fresh / Reset All Scores</button>
+                    </div>
+
                     <h3 class="text-xl font-semibold mt-6 mb-3 text-blue-600">Operational Guide:</h3>
                     <ol class="list-decimal list-inside space-y-3 pl-4">
-                        <li><strong>Understand Your Project:</strong> Before starting, ensure you have a thorough understanding of your project's scope, location, duration, traffic characteristics, known safety or operational issues, and geometric conditions.</li>
+                        <li><strong>Understand the Project:</strong> Before starting, ensure a thorough understanding of the project's scope, location, duration, traffic characteristics, known safety or operational issues, and geometric conditions.</li>
                         <li>
                             <strong>Evaluate Each SWZ System:</strong>
                             <ul class="list-disc list-inside ml-5 space-y-2 mt-2">
-                                <li>Use the navigation panel to select each SWZ system module.</li>
-                                <li>Within each module, select the radio button that most accurately reflects the conditions of your specific project.</li>
-                                <li>As you make selections, the scores will update in real-time.</li>
+                                <li>Select a system from the menu or choose "Evaluate All Systems".</li>
+                                <li>For each factor, select the radio button that most accurately reflects the conditions of the specific project.</li>
+                                <li>Scores update in real-time.</li>
                             </ul>
                         </li>
                         <li>
                             <strong>Review the Summary:</strong>
                             <ul class="list-disc list-inside ml-5 space-y-2 mt-2">
                                 <li>Navigate to the "Summary & Recommendations" page.</li>
-                                <li>This page provides a consolidated table of scores and recommendations.</li>
-                                <li>Use the "Generate PDF Summary" tool to create a formal report of your evaluation.</li>
+                                <li>Review the consolidated table and chart. Click system names for detailed descriptions.</li>
+                                <li>Use the "Generate PDF Summary" tool to create a formal report for the project file.</li>
                             </ul>
                         </li>
                         <li>
                             <strong>Make an Informed Decision:</strong>
                             <ul class="list-disc list-inside ml-5 space-y-2 mt-2">
-                                <li>The scores and recommendations are intended to support your decision-making process.</li>
-                                <li>Always combine these outputs with professional engineering judgment, ARDOT policies, and budget availability to arrive at the final decision.</li>
+                                <li>The scores and recommendations are intended to support the decision-making process.</li>
+                                <li>Always combine these outputs with professional engineering judgment, current A<span class="ardot-r-style">R</span>DOT policies, and budget availability to arrive at the final decision.</li>
                             </ul>
                         </li>
                     </ol>
                 </div>
             </div>
 
+            <!-- Evaluate All Page -->
+            <div id="evaluate-all-page" class="page-content hidden bg-white p-6 rounded-xl shadow-lg">
+                <div class="border-b border-gray-200 pb-4 mb-6">
+                    <h2 class="text-3xl font-bold text-blue-700">Evaluate All Systems</h2>
+                    <p class="text-gray-600 mt-2">This unified view lists all unique project characteristic questions from all systems. Answering a question here updates all applicable systems automatically.</p>
+                </div>
+                
+                <div id="all-systems-container" class="space-y-6">
+                    <!-- Dynamic Content -->
+                </div>
+                <div class="mt-8 pt-6 border-t border-gray-200 flex justify-end">
+                    <button id="eval-all-to-summary" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-6 rounded-lg shadow-sm transition-colors">View Summary & Recommendations &rarr;</button>
+                </div>
+            </div>
+
+            <!-- Individual System Evaluation Page -->
             <div id="system-evaluation-page" class="page-content hidden bg-white p-6 rounded-xl shadow-lg">
                 <h2 id="system-title" class="text-3xl font-bold text-blue-700 mb-2">System Evaluation: <span id="system-name-placeholder"></span></h2>
                 <p id="system-description-placeholder" class="text-md text-gray-600 mb-8 border-b border-gray-200 pb-4"></p>
                 
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     <div class="lg:col-span-2 space-y-8" id="factors-container">
+                        <!-- Factors injected here -->
                     </div>
-                    <div class="lg:col-span-1 space-y-6">
-                        <div class="bg-gray-50 p-5 rounded-lg shadow-md sticky top-24"> 
+                    <div class="lg:col-span-1 space-y-6 self-start">
+                        <div class="bg-gray-50 p-5 rounded-lg shadow-md lg:sticky lg:top-24"> 
                             <h3 class="text-xl font-semibold text-blue-700 mb-3">System Score</h3>
                             <p class="text-gray-700 text-sm">Raw Score: <span id="current-system-raw-score" class="font-bold text-lg">0</span> / <span id="current-system-max-score" class="font-bold text-lg">0</span></p>
-                            <p class="text-gray-700 text-sm mb-3">Normalized Score: <span id="current-system-normalized-score" class="font-bold text-xl text-blue-600">0</span>%</p>
+                            <p class="text-gray-700 text-sm mb-1">Normalized Score: <span id="current-system-normalized-score" class="font-bold text-xl text-blue-600">0</span>%</p>
+                            <p class="text-sm font-medium mb-3" id="current-system-recommendation">Recommendation: <span class="font-bold">--</span></p>
+                            
                             <div class="chart-container mt-3">
                                 <canvas id="current-system-chart"></canvas>
                             </div>
-                            <button id="reset-system-scores" class="mt-5 w-full bg-amber-500 hover:bg-amber-600 text-white font-semibold py-2.5 px-4 rounded-lg shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-amber-400 focus:ring-opacity-75">Reset Scores for this System</button>
+                            <button id="reset-system-scores" class="mt-5 w-full bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-semibold py-2 px-4 rounded shadow-sm text-sm transition-colors">Reset This System</button>
                         </div>
                     </div>
                 </div>
+                <div class="mt-8 pt-6 border-t border-gray-200 flex justify-between">
+                     <button id="prev-system-button" class="bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-2.5 px-6 rounded-lg shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-opacity-75">&larr; Previous</button>
+                    <button id="next-system-button" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-6 rounded-lg shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-75">Next System &rarr;</button>
+                </div>
             </div>
 
+            <!-- Summary Page -->
             <div id="summary-page" class="page-content hidden bg-white p-6 rounded-xl shadow-lg">
                 <h2 class="text-3xl font-bold text-blue-700 mb-6 border-b-2 border-blue-200 pb-3">Summary of SWZ System Evaluations</h2>
                 <div class="overflow-x-auto mb-8 shadow-md rounded-lg">
                     <table class="min-w-full divide-y divide-gray-200 border border-gray-300">
                         <thead class="bg-gray-100">
                             <tr>
-                                <th scope="col" class="px-6 py-3.5 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">SWZ System</th>
+                                <th scope="col" class="px-6 py-3.5 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">SWZ System (Click for Info)</th>
                                 <th scope="col" class="px-6 py-3.5 text-center text-sm font-semibold text-gray-700 uppercase tracking-wider">Normalized Score (%)</th>
                                 <th scope="col" class="px-6 py-3.5 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">Recommendation</th>
                             </tr>
@@ -145,8 +194,8 @@
                 <p class="text-sm text-gray-600 mb-6 p-3 bg-gray-50 rounded-md border border-gray-200">
                     <strong>Recommendation Thresholds:</strong>
                     Score ≥ 70%: <span class="font-bold text-green-600">Strongly Recommended</span>;
-                    Score 40% - 69%: <span class="font-bold text-yellow-600">Should be Considered</span>;
-                    Score < 40%: <span class="font-bold text-red-600">Probably Not Recommended</span>.
+                    Score 30% - 69%: <span class="font-bold text-yellow-600">Considered</span>;
+                    Score < 30%: <span class="font-bold text-red-600">Not Recommended</span>.
                 </p>
                 <div class="summary-chart-container bg-gray-50 p-4 rounded-lg shadow-md mb-6 border border-gray-200">
                      <canvas id="summary-systems-chart"></canvas>
@@ -161,9 +210,34 @@
             </div>
         </main>
     </div>
+    
+    <!-- Info Modal -->
+    <div id="info-modal" class="modal fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center hidden z-[60]">
+        <div class="modal-content bg-white p-6 rounded-lg shadow-xl w-11/12 md:w-2/3 transform scale-95">
+            <div class="flex justify-between items-center mb-4 border-b pb-2">
+                <h3 id="modal-system-name" class="text-2xl font-bold text-blue-700">System Name</h3>
+                <button id="close-modal-button" class="text-gray-500 hover:text-gray-700">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            <div class="text-gray-700 space-y-4">
+                <div>
+                    <h4 class="font-bold text-gray-900">Description & Purpose</h4>
+                    <p id="modal-system-desc"></p>
+                </div>
+                 <div>
+                    <h4 class="font-bold text-gray-900">Considerations</h4>
+                    <p class="text-sm">Please refer to the factor list for detailed deployment criteria.</p>
+                </div>
+            </div>
+             <div class="mt-6 flex justify-end">
+                <button id="close-modal-btn-bottom" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-2 px-4 rounded">Close</button>
+            </div>
+        </div>
+    </div>
 
     <footer class="bg-blue-800 text-blue-100 text-center p-5 mt-auto border-t border-blue-700">
-        <p class="text-xs">&copy; <span id="current-year"></span> Arkansas Department of Transportation. All Rights Reserved. <br> SWZ Decision Support Tool - For Internal Planning & Evaluation Purposes Only.</p>
+        <p class="text-xs">&copy; <span id="current-year"></span> A<span class="ardot-r-style">R</span>DOT. All Rights Reserved. <br> SWZ Decision Support Tool - For Internal Planning & Evaluation Purposes Only.</p>
     </footer>
 
 <script>
@@ -171,7 +245,7 @@
 
     const swzSystems = {
         TQDS: {
-            id: "TQDS", name: "Temporary Queue Detection System", description: "Evaluates the need for a system to detect queues and warn approaching motorists, primarily to prevent rear-end collisions.", maxPossibleScore: 145,
+            id: "TQDS", name: "Queue Warning System", description: "Evaluates the need for a system to detect queues and warn approaching motorists, primarily to prevent rear-end collisions. Components typically include sensors, portable changeable message signs (PCMS), and a central processor.", maxPossibleScore: 145,
             factors: [
                 { id: "TQDS-1", text: "Highway Functional Class & ADT", max: 20, options: [
                     { text: "Interstate/High Vol Freeway (>35,000 ADT)", score: 20 }, { text: "Major Arterial/Med Vol Freeway (10,000-35,000 ADT)", score: 15 },
@@ -203,7 +277,7 @@
             ]
         },
         TSMS: {
-            id: "TSMS", name: "Temporary Speed Monitoring System", description: "Assesses the need for systems that monitor vehicle speeds and provide feedback to drivers or data for enforcement, aiming to improve speed compliance.", maxPossibleScore: 115,
+            id: "TSMS", name: "Dynamic Speed Feedback Sign", description: "Assesses the need for systems that monitor vehicle speeds and provide feedback to drivers or data for enforcement, aiming to improve speed compliance.", maxPossibleScore: 115,
             factors: [
                 { id: "TSMS-1", text: "Highway Functional Class & Posted Speed", max: 20, options: [
                     { text: "Interstate/Freeway (Posted Speed ≥ 65 mph)", score: 20 }, { text: "Major Arterial/Rural Highway (Posted Speed 55-64 mph)", score: 15 },
@@ -237,7 +311,7 @@
             ]
         },
         TCEAS: {
-            id: "TCEAS", name: "Temporary Construction Equipment Alert System", description: "Evaluates the need for systems to alert motorists to construction vehicles entering/exiting the roadway or moving within the work zone.", maxPossibleScore: 90,
+            id: "TCEAS", name: "Construction Equipment Alert System", description: "Evaluates the need for systems to alert motorists to construction vehicles entering/exiting the roadway or moving within the work zone.", maxPossibleScore: 90,
             factors: [
                 { id: "TCEAS-1", text: "Frequency & Nature of Construction Vehicle Movements", max: 25, options: [
                     { text: "High frequency of slow-moving equipment entering/exiting active high-speed travel lanes (multiple times/hour/access point) OR frequent crossing of active lanes", score: 25 },
@@ -266,7 +340,7 @@
             ]
         },
         TTTS: {
-            id: "TTTS", name: "Temporary Travel Time System", description: "Assesses the need for systems that provide drivers with real-time estimated travel times through or around a work zone.", maxPossibleScore: 108,
+            id: "TTTS", name: "Real-time Traveler Information System", description: "Assesses the need for systems that provide drivers with real-time estimated travel times through or around a work zone.", maxPossibleScore: 108,
             factors: [
                 { id: "TTTS-1", text: "Expected Level & Variability of Delay", max: 25, options: [
                     { text: "Anticipated delays routinely >20 minutes OR highly variable delays (frequent swings 5 min to 30+ min)", score: 25 },
@@ -299,7 +373,7 @@
             ]
         },
         TIDSS: {
-            id: "TIDSS", name: "Temporary Incident Detection & Surveillance System", description: "Evaluates the need for systems (e.g., cameras) to detect incidents quickly, improve situational awareness, and aid in response management.", maxPossibleScore: 103,
+            id: "TIDSS", name: "Incident Management System", description: "Evaluates the need for systems (e.g., cameras) to detect incidents quickly, improve situational awareness, and aid in response management.", maxPossibleScore: 103,
             factors: [
                 { id: "TIDSS-1", text: "Highway Functional Class, ADT & Strategic Importance", max: 20, options: [
                     { text: "Interstate/High Vol Freeway (>30,000 ADT) OR route with historically long incident clearance times", score: 20 },
@@ -330,7 +404,7 @@
             ]
         },
         TOHWS: {
-            id: "TOHWS", name: "Temporary Over-height Vehicle Warning System", description: "Assesses the need for systems to detect and warn over-height vehicles approaching a temporary low-clearance structure.", maxPossibleScore: 100,
+            id: "TOHWS", name: "Over-height Vehicle Warning System", description: "Assesses the need for systems to detect and warn over-height vehicles approaching a temporary low-clearance structure.", maxPossibleScore: 100,
             factors: [
                 { id: "TOHWS-1", text: "Presence of Temporary Reduced Vertical Clearance Below Critical Threshold", max: 60, options: [
                     { text: "Temporary vertical clearance below ARDOT legal minimum OR below typical height of known permitted loads on route", score: 60 },
@@ -427,16 +501,29 @@
     const currentSystemRawScoreEl = document.getElementById('current-system-raw-score');
     const currentSystemMaxScoreEl = document.getElementById('current-system-max-score');
     const currentSystemNormalizedScoreEl = document.getElementById('current-system-normalized-score');
+    const currentSystemRecommendationEl = document.getElementById('current-system-recommendation');
     const summaryTableBody = document.getElementById('summary-table-body');
     const mobileMenuButton = document.getElementById('mobile-menu-button');
     const mainNav = document.getElementById('main-nav');
     const resetSystemScoresButton = document.getElementById('reset-system-scores');
     const resetAllScoresButton = document.getElementById('reset-all-scores');
+    const landingResetButton = document.getElementById('landing-reset-button');
     const pdfButton = document.getElementById('generate-pdf-button');
+    const nextSystemButton = document.getElementById('next-system-button');
+    const prevSystemButton = document.getElementById('prev-system-button');
+    const evalAllButton = document.getElementById('eval-all-to-summary');
     
+    const infoModal = document.getElementById('info-modal');
+    const closeModalButton = document.getElementById('close-modal-button');
+    const closeModalBtnBottom = document.getElementById('close-modal-btn-bottom');
+    const modalSystemName = document.getElementById('modal-system-name');
+    const modalSystemDesc = document.getElementById('modal-system-desc');
+    const projectNameInput = document.getElementById('project-name-input');
+    const projectDescInput = document.getElementById('project-desc-input');
 
     document.addEventListener('DOMContentLoaded', () => {
         initializeScores();
+        loadProjectDetails(); // Load saved details
         navigateToPage('instructions-page');
         updateSummaryTable(); 
         renderSummaryChart(); 
@@ -465,28 +552,63 @@
         if(resetAllScoresButton) {
             resetAllScoresButton.addEventListener('click', handleResetAllScores);
         }
+        if(landingResetButton) {
+            landingResetButton.addEventListener('click', handleResetAllScores);
+        }
         if(pdfButton) {
             pdfButton.addEventListener('click', handleGeneratePdf);
         }
+        if(nextSystemButton) {
+            nextSystemButton.addEventListener('click', handleNextSystem);
+        }
+        if(prevSystemButton) {
+            prevSystemButton.addEventListener('click', handlePrevSystem);
+        }
+        if(evalAllButton) {
+            evalAllButton.addEventListener('click', () => navigateToPage('summary-page'));
+        }
+        
+        // Listeners for inputs
+        if(projectNameInput) projectNameInput.addEventListener('input', saveProjectDetails);
+        if(projectDescInput) projectDescInput.addEventListener('input', saveProjectDetails);
+
+        // Modal listeners
+        if(closeModalButton) closeModalButton.addEventListener('click', () => infoModal.classList.add('hidden'));
+        if(closeModalBtnBottom) closeModalBtnBottom.addEventListener('click', () => infoModal.classList.add('hidden'));
+        infoModal.addEventListener('click', (e) => {
+            if (e.target === infoModal) infoModal.classList.add('hidden');
+        });
     });
 
     function initializeScores() {
         Object.keys(swzSystems).forEach(sysId => {
             systemScores[sysId] = {};
             swzSystems[sysId].factors.forEach(factor => {
-                const savedScore = localStorage.getItem(`${sysId}-${factor.id}`);
+                const savedScore = sessionStorage.getItem(`${sysId}-${factor.id}`);
                 systemScores[sysId][factor.id] = savedScore !== null ? parseInt(savedScore, 10) : 0;
             });
         });
     }
+
+    function saveProjectDetails() {
+        sessionStorage.setItem('project-name', projectNameInput.value);
+        sessionStorage.setItem('project-desc', projectDescInput.value);
+    }
+
+    function loadProjectDetails() {
+        const name = sessionStorage.getItem('project-name');
+        const desc = sessionStorage.getItem('project-desc');
+        if(name) projectNameInput.value = name;
+        if(desc) projectDescInput.value = desc;
+    }
     
     function saveScore(systemId, factorId, score) {
-        localStorage.setItem(`${systemId}-${factorId}`, score);
+        sessionStorage.setItem(`${systemId}-${factorId}`, score);
     }
 
     function clearSystemScoresFromStorage(systemId) {
         swzSystems[systemId].factors.forEach(factor => {
-            localStorage.removeItem(`${systemId}-${factor.id}`);
+            sessionStorage.removeItem(`${systemId}-${factor.id}`);
         });
     }
 
@@ -494,11 +616,15 @@
          Object.keys(swzSystems).forEach(sysId => {
             clearSystemScoresFromStorage(sysId);
         });
+        sessionStorage.removeItem('project-name');
+        sessionStorage.removeItem('project-desc');
+        projectNameInput.value = '';
+        projectDescInput.value = '';
     }
 
     function handleResetSystemScores() {
         const systemToResetId = currentSystemId; 
-        if (systemToResetId && swzSystems[systemToResetId] && confirm(`Are you sure you want to reset scores for ${swzSystems[systemToResetId].name}? This action cannot be undone.`)) {
+        if (systemToResetId && swzSystems[systemToResetId]) {
             clearSystemScoresFromStorage(systemToResetId);
             
             systemScores[systemToResetId] = {}; 
@@ -516,70 +642,166 @@
     }
 
     function handleResetAllScores() {
-        if (confirm("Are you sure you want to reset ALL scores for ALL systems? This action cannot be undone.")) {
+        if (confirm("Confirm reset of scores and project details? This action cannot be undone.")) {
             clearAllScoresFromStorage();
             initializeScores(); 
             
             if (currentPage === 'system-evaluation-page' && currentSystemId) {
                 renderSystemEvaluationPage(currentSystemId); 
+            } else if (currentPage === 'evaluate-all-page') {
+                renderEvaluateAllPage();
             }
             updateSummaryTable(); 
             renderSummaryChart(); 
         }
     }
 
+    function handleNextSystem() {
+        const systemKeys = Object.keys(swzSystems);
+        const currentIndex = systemKeys.indexOf(currentSystemId);
+        
+        if (currentIndex < systemKeys.length - 1) {
+            const nextSystemId = systemKeys[currentIndex + 1];
+            navigateToPage('system-evaluation-page', nextSystemId);
+        } else {
+            navigateToPage('summary-page');
+        }
+    }
+    
+    function handlePrevSystem() {
+        const systemKeys = Object.keys(swzSystems);
+        const currentIndex = systemKeys.indexOf(currentSystemId);
+        
+        if (currentIndex > 0) {
+            const prevSystemId = systemKeys[currentIndex - 1];
+            navigateToPage('system-evaluation-page', prevSystemId);
+        } else {
+            navigateToPage('instructions-page');
+        }
+    }
+
+    function showSystemInfo(sysId) {
+        const system = swzSystems[sysId];
+        modalSystemName.innerHTML = system.name;
+        // Replace ARDOT with styled span
+        modalSystemDesc.innerHTML = system.description.replace(/ARDOT/g, 'A<span class="ardot-r-style">R</span>DOT');
+        infoModal.classList.remove('hidden');
+    }
+
     function handleGeneratePdf() {
         const doc = new jsPDF();
+        const today = new Date().toLocaleDateString();
+        const projName = sessionStorage.getItem('project-name') || "Untitled Project";
+        const projDesc = sessionStorage.getItem('project-desc') || "";
         
+        // Header
         doc.setFontSize(18);
-        doc.setTextColor("#0369a1");
-        doc.text("ARDOT SWZ Decision Support Tool - Summary Report", 14, 22);
+        doc.setTextColor("#1d4ed8"); 
+        doc.text("ARDOT SWZ Decision Support Tool - Summary Report", 14, 20);
 
-        doc.setFontSize(11);
-        doc.setTextColor("#1f2937");
-        doc.text(`Report Generated: ${new Date().toLocaleDateString()}`, 14, 30);
+        doc.setFontSize(10);
+        doc.setTextColor("#374151");
+        doc.text(`Report Generated: ${today}`, 14, 28);
+        doc.text(`Project: ${projName}`, 14, 33);
         
-        const tableData = [];
+        if (projDesc) {
+            doc.setFontSize(9);
+            const descLines = doc.splitTextToSize(projDesc, 180);
+            doc.text(descLines, 14, 38);
+            var startY = 40 + (descLines.length * 4);
+        } else {
+            var startY = 38;
+        }
+
+        doc.setFontSize(9);
+        doc.setTextColor("#000000");
+        doc.text("Notice: This report is an aid for decision-making and does not replace engineering judgment.", 14, startY);
+        startY += 5;
+        doc.text("Thresholds: >=70% Strongly Recommended | 30-69% Considered | <30% Not Recommended", 14, startY);
+        startY += 7;
+
+        // Summary Table
+        const summaryBody = [];
         Object.keys(swzSystems).forEach(sysId => {
             const system = swzSystems[sysId];
             const scores = calculateScores(sysId);
-            const recommendation = getRecommendation(scores.normalizedScore);
-            tableData.push([
-                system.name,
-                `${scores.normalizedScore}%`,
-                recommendation.text
-            ]);
+            const rec = getRecommendation(scores.normalizedScore);
+            summaryBody.push([system.name, `${scores.normalizedScore}%`, rec.text]);
         });
 
         doc.autoTable({
-            startY: 40,
-            head: [['SWZ System', 'Normalized Score (%)', 'Recommendation']],
-            body: tableData,
+            startY: startY,
+            head: [['SWZ System', 'Score', 'Recommendation']],
+            body: summaryBody,
             theme: 'striped',
-            headStyles: { fillColor: [3, 105, 161] } // ARDOT Blue
+            headStyles: { fillColor: [29, 78, 216] }, 
+            columnStyles: { 2: { fontStyle: 'bold' } },
+            didParseCell: function(data) {
+                 if (data.section === 'body' && data.column.index === 2) {
+                     const text = data.cell.raw;
+                     if (text === 'Strongly Recommended') data.cell.styles.textColor = [22, 163, 74];
+                     else if (text === 'Considered') data.cell.styles.textColor = [202, 138, 4];
+                     else data.cell.styles.textColor = [220, 38, 38];
+                 }
+            }
         });
 
-        const lastTableY = doc.lastAutoTable.finalY;
+        let currentY = doc.lastAutoTable.finalY + 10;
 
-        const canvas = document.getElementById('summary-systems-chart');
-        const originalBg = canvas.style.backgroundColor;
-        canvas.style.backgroundColor = 'white';
-        summaryChartInstance.options.animation = false;
-        summaryChartInstance.update();
+        // Detailed Assessments
+        doc.addPage();
+        currentY = 20;
+        doc.setFontSize(14);
+        doc.setTextColor("#1d4ed8");
+        doc.text("Detailed System Assessments", 14, currentY);
+        currentY += 10;
 
-        const imgData = canvas.toDataURL('image/png');
-        
-        summaryChartInstance.options.animation = true;
-        summaryChartInstance.update();
-        canvas.style.backgroundColor = originalBg;
-        
-        const imgWidth = 180;
-        const imgHeight = (canvas.height * imgWidth) / canvas.width;
-        
-        doc.addImage(imgData, 'PNG', 15, lastTableY + 15, imgWidth, imgHeight);
+        Object.keys(swzSystems).forEach(sysId => {
+            const system = swzSystems[sysId];
+            const scores = calculateScores(sysId);
+            const rec = getRecommendation(scores.normalizedScore);
+            
+            if (currentY > 250) {
+                doc.addPage();
+                currentY = 20;
+            }
 
-        const date = new Date().toISOString().slice(0, 10);
-        doc.save(`ARDOT_SWZ_Summary_${date}.pdf`);
+            doc.setFontSize(12);
+            doc.setTextColor("#000000");
+            doc.setFont(undefined, 'bold');
+            doc.text(`${system.name}`, 14, currentY);
+            doc.setFont(undefined, 'normal');
+            doc.setFontSize(10);
+            doc.text(`Score: ${scores.normalizedScore}% - ${rec.text}`, 14, currentY + 5);
+            currentY += 10;
+            
+            doc.setFontSize(9);
+            doc.setTextColor("#4b5563");
+            const descLines = doc.splitTextToSize(system.description, 180);
+            doc.text(descLines, 14, currentY);
+            currentY += (descLines.length * 4) + 5;
+
+            const factorBody = system.factors.map(f => {
+                const selectedScore = systemScores[sysId][f.id];
+                const selectedOption = f.options.find(o => o.score === selectedScore);
+                return [f.text, selectedOption ? selectedOption.text : '-', `${selectedScore}/${f.max}`];
+            });
+
+            doc.autoTable({
+                startY: currentY,
+                head: [['Factor', 'Selected Condition', 'Score']],
+                body: factorBody,
+                theme: 'grid',
+                headStyles: { fillColor: [107, 114, 128] }, 
+                styles: { fontSize: 8 },
+                columnStyles: { 0: { cellWidth: 60 }, 1: { cellWidth: 100 } }
+            });
+            
+            currentY = doc.lastAutoTable.finalY + 15;
+        });
+
+        const dateStr = new Date().toISOString().slice(0, 10);
+        doc.save(`ARDOT_SWZ_Full_Report_${dateStr}.pdf`);
     }
 
     function navigateToPage(pageId, systemId = null) {
@@ -589,8 +811,12 @@
 
         navButtons.forEach(btn => {
             btn.classList.remove('active'); 
-            if (btn.dataset.page === pageId && (pageId !== 'system-evaluation-page' || btn.dataset.system === systemId)) {
-                btn.classList.add('active');
+            if (btn.dataset.page === pageId) {
+                if(pageId === 'system-evaluation-page') {
+                     if(btn.dataset.system === systemId) btn.classList.add('active');
+                } else {
+                     btn.classList.add('active');
+                }
             }
         });
 
@@ -600,15 +826,111 @@
         } else if (pageId === 'summary-page') {
             updateSummaryTable();
             renderSummaryChart();
+        } else if (pageId === 'evaluate-all-page') {
+            renderEvaluateAllPage();
         }
+        
+        const mainArea = document.querySelector('.main-content-area');
+        if (mainArea) mainArea.scrollTo(0,0);
+        window.scrollTo(0,0);
+    }
+
+    function renderEvaluateAllPage() {
+        const container = document.getElementById('all-systems-container');
+        container.innerHTML = '';
+
+        const uniqueFactorsMap = new Map();
+
+        Object.keys(swzSystems).forEach(sysId => {
+            const system = swzSystems[sysId];
+            system.factors.forEach(factor => {
+                const optionsSignature = JSON.stringify(factor.options.map(o => o.text)); 
+                const key = factor.text + "|" + optionsSignature;
+
+                if (!uniqueFactorsMap.has(key)) {
+                    uniqueFactorsMap.set(key, {
+                        text: factor.text,
+                        options: factor.options,
+                        optional: factor.optional,
+                        targets: []
+                    });
+                }
+                uniqueFactorsMap.get(key).targets.push({ sysId: sysId, factorId: factor.id });
+            });
+        });
+
+        let factorIndex = 0;
+        uniqueFactorsMap.forEach((uniqueFactor, key) => {
+             const factorEl = document.createElement('div');
+             factorEl.className = 'p-4 border border-gray-200 rounded-lg bg-gray-50';
+             let optionsHTML = `<fieldset><legend class="block text-sm font-semibold text-gray-800 mb-2">${uniqueFactor.text} ${uniqueFactor.optional ? '<span class="text-xs text-amber-700">(Optional)</span>' : ''}</legend> <div class="mt-2 space-y-2">`;
+             
+             const firstTarget = uniqueFactor.targets[0];
+             const currentScore = systemScores[firstTarget.sysId][firstTarget.factorId];
+
+             uniqueFactor.options.forEach((option, index) => {
+                const optionId = `eval-${factorIndex}-${index}`;
+                const isChecked = option.score === currentScore;
+                optionsHTML += `
+                    <label for="${optionId}" class="flex items-center p-2 border border-gray-300 rounded hover:border-blue-400 cursor-pointer transition-colors ${isChecked ? 'bg-blue-50 border-blue-400' : 'bg-white'}">
+                        <input type="radio" id="${optionId}" name="eval-factor-${factorIndex}" value="${option.score}" ${isChecked ? 'checked' : ''}
+                               class="text-blue-600 focus:ring-blue-500 h-4 w-4 border-gray-300">
+                        <span class="ml-3 text-sm text-gray-700">${option.text} <span class="font-semibold text-blue-600">(${option.score} pts)</span></span>
+                    </label>
+                `;
+             });
+             optionsHTML += `</div></fieldset>`;
+             factorEl.innerHTML = optionsHTML;
+             container.appendChild(factorEl);
+
+             const radios = factorEl.querySelectorAll(`input[name="eval-factor-${factorIndex}"]`);
+             radios.forEach(r => {
+                 r.addEventListener('change', (e) => {
+                      const val = parseInt(e.target.value, 10);
+                      
+                      uniqueFactor.targets.forEach(target => {
+                          systemScores[target.sysId][target.factorId] = val;
+                          saveScore(target.sysId, target.factorId, val);
+                      });
+                      
+                      radios.forEach(rb => rb.closest('label').className = 'flex items-center p-2 border border-gray-300 rounded hover:border-blue-400 cursor-pointer transition-colors bg-white');
+                      e.target.closest('label').className = 'flex items-center p-2 border border-gray-300 rounded hover:border-blue-400 cursor-pointer transition-colors bg-blue-50 border-blue-400';
+                 });
+             });
+
+             factorIndex++;
+        });
+    }
+    
+    function syncCommonFactors(factorText, optionText, scoreVal) {
+        Object.keys(swzSystems).forEach(sId => {
+            swzSystems[sId].factors.forEach(f => {
+                if (f.text === factorText) {
+                    f.options.forEach((o, idx) => {
+                        if (o.text === optionText) {
+                            systemScores[sId][f.id] = o.score;
+                            saveScore(sId, f.id, o.score);
+                            
+                            const r = document.getElementById(`eval-${f.id}-${idx}`);
+                            if(r) {
+                                r.checked = true;
+                                const group = document.querySelectorAll(`input[name="eval-${f.id}"]`);
+                                group.forEach(gr => gr.closest('label').className = 'flex items-center p-2 border border-gray-300 rounded hover:border-blue-400 cursor-pointer transition-colors bg-white');
+                                r.closest('label').className = 'flex items-center p-2 border border-gray-300 rounded hover:border-blue-400 cursor-pointer transition-colors bg-blue-50 border-blue-400';
+                            }
+                        }
+                    });
+                }
+            });
+        });
     }
 
     function renderSystemEvaluationPage(systemId) {
         const system = swzSystems[systemId];
         if (!system) return;
 
-        systemNamePlaceholder.textContent = system.name;
-        systemDescriptionPlaceholder.textContent = system.description;
+        systemNamePlaceholder.innerHTML = system.name;
+        systemDescriptionPlaceholder.innerHTML = system.description.replace(/ARDOT/g, 'A<span class="ardot-r-style">R</span>DOT');
         factorsContainer.innerHTML = '';
 
         system.factors.forEach(factor => {
@@ -650,6 +972,20 @@
             });
         });
         updateSystemScoresDisplay(systemId);
+
+        const systemKeys = Object.keys(swzSystems);
+        const currentIndex = systemKeys.indexOf(systemId);
+        if (currentIndex < systemKeys.length - 1) {
+            nextSystemButton.innerHTML = 'Next System &rarr;';
+        } else {
+            nextSystemButton.innerHTML = 'Go to Summary &rarr;';
+        }
+        
+        if (currentIndex === 0) {
+            prevSystemButton.innerHTML = '&larr; Instructions';
+        } else {
+            prevSystemButton.innerHTML = '&larr; Previous System';
+        }
     }
 
     function calculateScores(systemId) {
@@ -667,6 +1003,10 @@
         currentSystemRawScoreEl.textContent = scores.rawScore;
         currentSystemMaxScoreEl.textContent = scores.maxPossible;
         currentSystemNormalizedScoreEl.textContent = scores.normalizedScore;
+        
+        const rec = getRecommendation(scores.normalizedScore);
+        currentSystemRecommendationEl.innerHTML = `Recommendation: <span class="${rec.colorClass} font-bold">${rec.text}</span>`;
+        
         renderCurrentSystemChart(systemId, scores.normalizedScore);
     }
     
@@ -679,7 +1019,7 @@
 
             const row = summaryTableBody.insertRow();
             row.innerHTML = `
-                <td class="px-6 py-4 whitespace-normal text-sm font-medium text-gray-900">${system.name} (${sysId})</td>
+                <td class="px-6 py-4 whitespace-normal text-sm font-medium text-blue-600 hover:text-blue-800 cursor-pointer" onclick="showSystemInfo('${sysId}')">${system.name} <span class="text-xs text-gray-400 ml-1">🛈</span></td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 text-center">${scores.normalizedScore}%</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold ${recommendation.colorClass}">${recommendation.text}</td>
             `;
@@ -687,9 +1027,9 @@
     }
 
     function getRecommendation(normalizedScore) {
-        if (normalizedScore >= 70) return { text: "Strongly Recommended", colorClass: "text-green-600" };
-        if (normalizedScore >= 40) return { text: "Should be Considered", colorClass: "text-yellow-600" };
-        return { text: "Not Recommended", colorClass: "text-red-600" };
+        if (normalizedScore >= 70) return { text: "Strongly Recommended", colorClass: "text-green-600", pdfColor: [22, 163, 74] };
+        if (normalizedScore >= 30) return { text: "Considered", colorClass: "text-yellow-600", pdfColor: [202, 138, 4] };
+        return { text: "Not Recommended", colorClass: "text-red-600", pdfColor: [220, 38, 38] };
     }
 
 
@@ -752,9 +1092,8 @@
             labels.push(swzSystems[sysId].id);
             const scores = calculateScores(sysId);
             data.push(scores.normalizedScore);
-            if (scores.normalizedScore >= 70) backgroundColors.push('rgba(22, 163, 74, 0.8)'); 
-            else if (scores.normalizedScore >= 40) backgroundColors.push('rgba(234, 179, 8, 0.8)'); 
-            else backgroundColors.push('rgba(220, 38, 38, 0.8)'); 
+            const rec = getRecommendation(scores.normalizedScore);
+            backgroundColors.push(`rgba(${rec.pdfColor[0]}, ${rec.pdfColor[1]}, ${rec.pdfColor[2]}, 0.8)`);
         });
 
         if (summaryChartInstance) {
