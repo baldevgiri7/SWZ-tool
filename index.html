@@ -1,1133 +1,225 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ARDOT SWZ Decision Support Tool</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ARDOT Smart Work Zone Decision Support Tool v3.1</title>
+<style>
+:root{--blue:#003b70;--blue2:#075985;--sky:#eaf4fb;--ink:#1f2937;--muted:#667085;--line:#d8dee6;--green:#1f7a4d;--amber:#a15c00;--red:#b42318;--gray:#f5f7f9;--white:#fff;}
+*{box-sizing:border-box} body{margin:0;font-family:Arial,Helvetica,sans-serif;color:var(--ink);background:#f3f6f8;line-height:1.45}
+header{position:sticky;top:0;z-index:20;background:var(--blue);color:white;padding:13px 20px;box-shadow:0 2px 8px #0002}
+.header-inner{max-width:1500px;margin:auto;display:flex;align-items:center;justify-content:space-between;gap:15px} .brand{font-size:22px;font-weight:700} .version{font-size:12px;opacity:.9}
+.shell{max-width:1500px;margin:auto;display:grid;grid-template-columns:285px 1fr;min-height:calc(100vh - 60px)}
+nav{background:white;border-right:1px solid var(--line);padding:16px;position:sticky;top:60px;height:calc(100vh - 60px);overflow:auto}
+nav h3{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:#667085;margin:18px 10px 7px} .navbtn{width:100%;text-align:left;border:0;background:transparent;padding:10px 11px;border-radius:8px;cursor:pointer;color:#344054;font-size:13px;margin:1px 0} .navbtn:hover{background:#eef5fa} .navbtn.active{background:#dceef9;color:#004a7c;font-weight:700}
+.status-dot{float:right;width:9px;height:9px;border-radius:50%;margin-top:5px;background:#c7cdd4} .status-dot.done{background:var(--green)} .status-dot.need{background:var(--amber)} .status-dot.na{background:#667085}
+main{padding:22px;min-width:0} .page{display:none} .page.active{display:block} .card{background:white;border:1px solid var(--line);border-radius:5px;padding:20px;margin-bottom:16px;box-shadow:none} h1{font-size:25px;color:var(--blue);margin:0 0 8px} h2{font-size:19px;color:var(--blue);margin:0 0 12px} h3{font-size:15px;margin:16px 0 9px;color:#344054} .lead{color:#475467;max-width:1000px;margin-top:4px}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px} .grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px} label.field{display:block;font-size:12px;font-weight:700;color:#475467} input[type=text],input[type=date],input[type=number],select,textarea{width:100%;padding:9px 10px;border:1px solid #cfd6de;border-radius:7px;background:white;color:#1f2937;font:inherit;margin-top:5px} textarea{min-height:76px;resize:vertical}
+.btnrow{display:flex;flex-wrap:wrap;gap:9px;margin:16px 0} button.action{border:0;border-radius:7px;padding:10px 14px;font-weight:700;cursor:pointer} .primary{background:var(--blue2);color:white} .secondary{background:#e8eef3;color:#29445a} .danger{background:#fff0ee;color:#9f1d13;border:1px solid #fac5bd!important}
+.note{padding:11px 13px;background:#f7fafc;border-left:4px solid #6b93ad;border-radius:5px;color:#475467;font-size:13px} .warning{background:#fff8e7;border-left-color:#d99b21} .good{background:#edf8f2;border-left-color:#2f8f5b} .bad{background:#fff0ee;border-left-color:#c84636}
+.gate{border:1px solid #cfd8e1;background:#f8fafc;padding:14px;border-radius:4px;margin:10px 0} .gate-question{font-weight:700;margin-bottom:9px} .radio-row{display:flex;gap:18px;flex-wrap:wrap;font-size:14px} .radio-row label{cursor:pointer}
+.factor{border-top:1px solid #e3e7ec;padding:14px 0} .factor:first-child{border-top:0} .factor-title{font-weight:700;margin-bottom:8px} .option-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:7px} .option{border:1px solid #d8dee6;border-radius:4px;padding:8px 9px;background:#fff;cursor:pointer;font-size:13px;display:flex;gap:7px;align-items:flex-start} .option:hover{background:#f7fafc} .option.selected{border-color:#2f6f96;background:#eef6fb} .pts{font-weight:700;color:#355c73;white-space:nowrap;margin-left:auto}
+.scorebox{display:grid;grid-template-columns:135px 1fr;gap:14px;align-items:center;margin-top:12px;padding:12px 0;border-top:1px solid #e4e7eb} .scorevalue{font-size:30px;font-weight:800;color:var(--blue)} .scoremeta{font-size:12px;color:#667085}
+.badge{display:inline-block;padding:5px 9px;border-radius:999px;font-size:12px;font-weight:700} .b-high{background:#e7f5ec;color:#17633c} .b-mid{background:#fff4d6;color:#8a5200} .b-low{background:#fdecea;color:#a13025} .b-na{background:#eef0f2;color:#59636d} .b-need{background:#fff4d6;color:#8a5200}
+.summary-table{width:100%;border-collapse:collapse;font-size:13px} .summary-table th,.summary-table td{padding:9px;border:1px solid #e0e4e8;text-align:left;vertical-align:top} .summary-table th{background:#f3f5f7;color:#344054}
+.small{font-size:12px;color:#667085} details.more-details{border-top:1px solid #e4e7eb;margin-top:18px;padding-top:12px} details.more-details summary{cursor:pointer;font-weight:700;color:#344054;margin-bottom:12px}
+footer{padding:18px;text-align:center;color:#667085;font-size:11px}
 
-    <!-- Chosen Palette: Official Blue (header/accents), Light Neutrals (backgrounds), Dark Text. -->
-    
-    <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f3f4f6;
-            color: #1f2937;
-        }
-        ::-webkit-scrollbar { width: 8px; height: 8px; }
-        ::-webkit-scrollbar-track { background: #e5e7eb; border-radius: 10px; }
-        ::-webkit-scrollbar-thumb { background: #9ca3af; border-radius: 10px; }
-        ::-webkit-scrollbar-thumb:hover { background: #6b7280; }
-        .chart-container { position: relative; width: 100%; max-width: 280px; margin-left: auto; margin-right: auto; height: 160px; max-height: 200px; }
-        .summary-chart-container { position: relative; width: 100%; max-width: 700px; margin-left: auto; margin-right: auto; height: 380px; max-height: 450px; }
-        .main-content-area { min-height: calc(100vh - 128px); }
-        .factor-option:hover { background-color: #e0f2fe; }
-        .nav-button.active { background-color: #0369a1; color: white; }
-        .nav-button:hover:not(.active) { background-color: #e0f2fe; color: #0369a1; }
-        .ardot-r-style { font-size: 0.8em; position: relative; top: -0.05em; } /* Smaller R */
-    </style>
+.tool-note{background:#f7f9fb;border-left:3px solid #5b7f97;color:#475467;padding:9px 11px;margin-bottom:14px;font-size:12px}.status-card{border:1px solid var(--line);border-radius:4px;padding:12px;margin:12px 0}.status-card.complete{background:#f1f8f4;border-color:#9bd0ae}.status-card.draft{background:#fff9eb;border-color:#e6c36a}.autofill{display:inline-block;font-size:10px;font-weight:700;color:#245d3d;background:#eef7f1;border-radius:3px;padding:2px 6px;margin-left:6px}.locked-note{font-size:11px;color:#526b5b;margin-top:6px}.option.locked{cursor:default;opacity:.94}.report-banner{font-weight:800;text-align:center;padding:9px;border:2px solid #b42318;color:#8d1f17;margin:10px 0}.report-banner.complete{border-color:#2f8f5b;color:#17633c}
+@media(max-width:900px){.shell{grid-template-columns:1fr} nav{position:static;height:auto;border-right:0;border-bottom:1px solid var(--line)} .grid2,.grid3{grid-template-columns:1fr} main{padding:14px}}
+@media print{header,nav,.no-print,footer{display:none!important} body{background:white} .shell{display:block} main{padding:0} .page{display:block!important} .card{box-shadow:none;break-inside:avoid;border-color:#bbb} .interactive-only{display:none!important} }
+</style>
 </head>
-<body class="flex flex-col min-h-screen">
-
-    <header class="bg-blue-700 text-white shadow-lg sticky top-0 z-50">
-        <div class="container mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex items-center justify-between h-16">
-                <div class="flex items-center">
-                    <img src="image_14d4fb.png" alt="ARDOT Logo" class="h-10 mr-3" onerror="this.onerror=null; this.src='https://placehold.co/120x40/FFFFFF/022047?text=LOGO&font=arial';">
-                    <h1 class="text-xl sm:text-2xl font-semibold">
-                        A<span class="ardot-r-style">R</span>DOT SWZ Decision Support Tool
-                    </h1>
-                </div>
-                <div class="sm:hidden">
-                    <button id="mobile-menu-button" class="text-white focus:outline-none p-2 rounded-md hover:bg-blue-600">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
-                    </button>
-                </div>
-            </div>
-        </div>
-    </header>
-
-    <div class="container mx-auto flex flex-col sm:flex-row flex-1">
-        <!-- Navigation Menu -->
-        <nav id="main-nav" class="w-full sm:w-80 bg-white sm:shadow-md p-4 space-y-1.5 hidden sm:block flex-shrink-0 sm:sticky sm:top-16 self-start overflow-y-auto" style="max-height: calc(100vh - 64px);">
-            <button data-page="instructions-page" class="w-full text-left px-4 py-2.5 rounded-lg text-sm font-medium text-gray-700 nav-button">Instructions & About</button>
-            
-            <h3 class="px-4 pt-3 pb-1 text-xs font-bold text-gray-500 uppercase tracking-wider">Evaluation</h3>
-            <button data-page="evaluate-all-page" class="w-full text-left px-4 py-2.5 rounded-lg text-sm font-medium text-gray-700 nav-button border-l-4 border-transparent hover:border-blue-500">Evaluate All Systems</button>
-            
-            <h3 class="px-4 pt-3 pb-1 text-xs font-bold text-gray-500 uppercase tracking-wider">Individual Systems</h3>
-            <button data-page="system-evaluation-page" data-system="TQDS" class="w-full text-left px-4 py-2.5 rounded-lg text-sm font-medium text-gray-700 nav-button">1. Queue Warning System</button>
-            <button data-page="system-evaluation-page" data-system="TSMS" class="w-full text-left px-4 py-2.5 rounded-lg text-sm font-medium text-gray-700 nav-button">2. Dynamic Speed Feedback Sign</button>
-            <button data-page="system-evaluation-page" data-system="TCEAS" class="w-full text-left px-4 py-2.5 rounded-lg text-sm font-medium text-gray-700 nav-button">3. Construction Equipment Alert System</button>
-            <button data-page="system-evaluation-page" data-system="TTTS" class="w-full text-left px-4 py-2.5 rounded-lg text-sm font-medium text-gray-700 nav-button">4. Real-time Traveler Information System</button>
-            <button data-page="system-evaluation-page" data-system="TIDSS" class="w-full text-left px-4 py-2.5 rounded-lg text-sm font-medium text-gray-700 nav-button">5. Incident Management System</button>
-            <button data-page="system-evaluation-page" data-system="TOHWS" class="w-full text-left px-4 py-2.5 rounded-lg text-sm font-medium text-gray-700 nav-button">6. Over-height Vehicle Warning System</button>
-            <button data-page="system-evaluation-page" data-system="DLMS" class="w-full text-left px-4 py-2.5 rounded-lg text-sm font-medium text-gray-700 nav-button">7. Dynamic Lane Merge System</button>
-            <button data-page="system-evaluation-page" data-system="VSLS" class="w-full text-left px-4 py-2.5 rounded-lg text-sm font-medium text-gray-700 nav-button">8. Variable Speed Limit System</button>
-            
-            <h3 class="px-4 pt-3 pb-1 text-xs font-bold text-gray-500 uppercase tracking-wider">Consolidated Results</h3>
-            <button data-page="summary-page" class="w-full text-left px-4 py-2.5 rounded-lg text-sm font-medium text-gray-700 nav-button">Summary & Recommendations</button>
-        </nav>
-
-        <main class="flex-1 p-4 sm:p-6 lg:p-8 main-content-area overflow-y-auto">
-            <!-- Instructions Page -->
-            <div id="instructions-page" class="page-content bg-white p-6 rounded-xl shadow-lg">
-                <h2 class="text-3xl font-bold text-blue-700 mb-6 border-b-2 border-blue-200 pb-3">Using the A<span class="ardot-r-style">R</span>DOT SWZ Decision Support Tool</h2>
-                
-                <div class="prose prose-sm sm:prose max-w-none text-gray-700">
-                    <p class="mb-4">This interactive web application is designed to assist Arkansas Department of Transportation (A<span class="ardot-r-style">R</span>DOT) personnel in making informed decisions about deploying various Smart Work Zone (SWZ) systems. By systematically evaluating project-specific conditions against predefined criteria, this tool helps quantify the need for different technologies.</p>
-                    
-                    <!-- Project Details Section -->
-                    <div class="bg-gray-50 p-5 rounded-lg border border-gray-200 mb-6 shadow-sm">
-                        <h3 class="text-lg font-bold text-blue-800 mb-3">Project Information</h3>
-                        <div class="grid grid-cols-1 gap-4">
-                            <div>
-                                <label for="project-name-input" class="block text-sm font-medium text-gray-700 mb-1">Project Name / ID</label>
-                                <input type="text" id="project-name-input" class="w-full p-2 border border-gray-300 rounded focus:ring-blue-500 focus:border-blue-500" placeholder="e.g., Job 012345 - I-40 Rehab">
-                            </div>
-                            <div>
-                                <label for="project-desc-input" class="block text-sm font-medium text-gray-700 mb-1">Project Details / Notes</label>
-                                <textarea id="project-desc-input" rows="3" class="w-full p-2 border border-gray-300 rounded focus:ring-blue-500 focus:border-blue-500" placeholder="Brief description of the work zone..."></textarea>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="bg-blue-50 p-4 rounded-lg border border-blue-100 mb-6">
-                         <h4 class="font-bold text-blue-800 mb-2">Quick Start</h4>
-                         <p class="text-sm mb-3">Use the navigation menu to evaluate systems individually, or use the "Evaluate All Systems" feature to see all factors in a single view.</p>
-                         <button id="landing-reset-button" class="bg-white border border-red-300 text-red-600 hover:bg-red-50 font-semibold py-2 px-4 rounded shadow-sm text-sm transition-colors">Start Fresh / Reset All Scores</button>
-                    </div>
-
-                    <h3 class="text-xl font-semibold mt-6 mb-3 text-blue-600">Operational Guide:</h3>
-                    <ol class="list-decimal list-inside space-y-3 pl-4">
-                        <li><strong>Understand the Project:</strong> Before starting, ensure a thorough understanding of the project's scope, location, duration, traffic characteristics, known safety or operational issues, and geometric conditions.</li>
-                        <li>
-                            <strong>Evaluate Each SWZ System:</strong>
-                            <ul class="list-disc list-inside ml-5 space-y-2 mt-2">
-                                <li>Select a system from the menu or choose "Evaluate All Systems".</li>
-                                <li>For each factor, select the radio button that most accurately reflects the conditions of the specific project.</li>
-                                <li>Scores update in real-time.</li>
-                            </ul>
-                        </li>
-                        <li>
-                            <strong>Review the Summary:</strong>
-                            <ul class="list-disc list-inside ml-5 space-y-2 mt-2">
-                                <li>Navigate to the "Summary & Recommendations" page.</li>
-                                <li>Review the consolidated table and chart. Click system names for detailed descriptions.</li>
-                                <li>Use the "Generate PDF Summary" tool to create a formal report for the project file.</li>
-                            </ul>
-                        </li>
-                        <li>
-                            <strong>Make an Informed Decision:</strong>
-                            <ul class="list-disc list-inside ml-5 space-y-2 mt-2">
-                                <li>The scores and recommendations are intended to support the decision-making process.</li>
-                                <li>Always combine these outputs with professional engineering judgment, current A<span class="ardot-r-style">R</span>DOT policies, and budget availability to arrive at the final decision.</li>
-                            </ul>
-                        </li>
-                    </ol>
-                </div>
-            </div>
-
-            <!-- Evaluate All Page -->
-            <div id="evaluate-all-page" class="page-content hidden bg-white p-6 rounded-xl shadow-lg">
-                <div class="border-b border-gray-200 pb-4 mb-6">
-                    <h2 class="text-3xl font-bold text-blue-700">Evaluate All Systems</h2>
-                    <p class="text-gray-600 mt-2">This unified view lists all unique project characteristic questions from all systems. Answering a question here updates all applicable systems automatically.</p>
-                </div>
-                
-                <div id="all-systems-container" class="space-y-6">
-                    <!-- Dynamic Content -->
-                </div>
-                <div class="mt-8 pt-6 border-t border-gray-200 flex justify-end">
-                    <button id="eval-all-to-summary" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-6 rounded-lg shadow-sm transition-colors">View Summary & Recommendations &rarr;</button>
-                </div>
-            </div>
-
-            <!-- Individual System Evaluation Page -->
-            <div id="system-evaluation-page" class="page-content hidden bg-white p-6 rounded-xl shadow-lg">
-                <h2 id="system-title" class="text-3xl font-bold text-blue-700 mb-2">System Evaluation: <span id="system-name-placeholder"></span></h2>
-                <p id="system-description-placeholder" class="text-md text-gray-600 mb-8 border-b border-gray-200 pb-4"></p>
-                
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    <div class="lg:col-span-2 space-y-8" id="factors-container">
-                        <!-- Factors injected here -->
-                    </div>
-                    <div class="lg:col-span-1 space-y-6 self-start">
-                        <div class="bg-gray-50 p-5 rounded-lg shadow-md lg:sticky lg:top-24"> 
-                            <h3 class="text-xl font-semibold text-blue-700 mb-3">System Score</h3>
-                            <p class="text-gray-700 text-sm">Raw Score: <span id="current-system-raw-score" class="font-bold text-lg">0</span> / <span id="current-system-max-score" class="font-bold text-lg">0</span></p>
-                            <p class="text-gray-700 text-sm mb-1">Normalized Score: <span id="current-system-normalized-score" class="font-bold text-xl text-blue-600">0</span>%</p>
-                            <p class="text-sm font-medium mb-3" id="current-system-recommendation">Recommendation: <span class="font-bold">--</span></p>
-                            
-                            <div class="chart-container mt-3">
-                                <canvas id="current-system-chart"></canvas>
-                            </div>
-                            <button id="reset-system-scores" class="mt-5 w-full bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-semibold py-2 px-4 rounded shadow-sm text-sm transition-colors">Reset This System</button>
-                        </div>
-                    </div>
-                </div>
-                <div class="mt-8 pt-6 border-t border-gray-200 flex justify-between">
-                     <button id="prev-system-button" class="bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-2.5 px-6 rounded-lg shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-opacity-75">&larr; Previous</button>
-                    <button id="next-system-button" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-6 rounded-lg shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-75">Next System &rarr;</button>
-                </div>
-            </div>
-
-            <!-- Summary Page -->
-            <div id="summary-page" class="page-content hidden bg-white p-6 rounded-xl shadow-lg">
-                <h2 class="text-3xl font-bold text-blue-700 mb-6 border-b-2 border-blue-200 pb-3">Summary of SWZ System Evaluations</h2>
-                <div class="overflow-x-auto mb-8 shadow-md rounded-lg">
-                    <table class="min-w-full divide-y divide-gray-200 border border-gray-300">
-                        <thead class="bg-gray-100">
-                            <tr>
-                                <th scope="col" class="px-6 py-3.5 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">SWZ System (Click for Info)</th>
-                                <th scope="col" class="px-6 py-3.5 text-center text-sm font-semibold text-gray-700 uppercase tracking-wider">Normalized Score (%)</th>
-                                <th scope="col" class="px-6 py-3.5 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">Recommendation</th>
-                            </tr>
-                        </thead>
-                        <tbody id="summary-table-body" class="bg-white divide-y divide-gray-200">
-                        </tbody>
-                    </table>
-                </div>
-                <p class="text-sm text-gray-600 mb-6 p-3 bg-gray-50 rounded-md border border-gray-200">
-                    <strong>Recommendation Thresholds:</strong>
-                    Score ≥ 70%: <span class="font-bold text-green-600">Strongly Recommended</span>;
-                    Score 30% - 69%: <span class="font-bold text-yellow-600">Considered</span>;
-                    Score < 30%: <span class="font-bold text-red-600">Not Recommended</span>.
-                </p>
-                <div class="summary-chart-container bg-gray-50 p-4 rounded-lg shadow-md mb-6 border border-gray-200">
-                     <canvas id="summary-systems-chart"></canvas>
-                </div>
-                <div class="mt-8 pt-6 border-t border-gray-200">
-                    <h3 class="text-xl font-semibold text-blue-700 mb-4">Reporting & Data</h3>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <button id="generate-pdf-button" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-5 rounded-lg shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-75">Generate PDF Summary</button>
-                        <button id="reset-all-scores" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2.5 px-5 rounded-lg shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-75">Reset All Scores</button>
-                    </div>
-                </div>
-            </div>
-        </main>
-    </div>
-    
-    <!-- Info Modal -->
-    <div id="info-modal" class="modal fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center hidden z-[60]">
-        <div class="modal-content bg-white p-6 rounded-lg shadow-xl w-11/12 md:w-2/3 transform scale-95">
-            <div class="flex justify-between items-center mb-4 border-b pb-2">
-                <h3 id="modal-system-name" class="text-2xl font-bold text-blue-700">System Name</h3>
-                <button id="close-modal-button" class="text-gray-500 hover:text-gray-700">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                </button>
-            </div>
-            <div class="text-gray-700 space-y-4">
-                <div>
-                    <h4 class="font-bold text-gray-900">Description & Purpose</h4>
-                    <p id="modal-system-desc"></p>
-                </div>
-                 <div>
-                    <h4 class="font-bold text-gray-900">Considerations</h4>
-                    <p class="text-sm">Please refer to the factor list for detailed deployment criteria.</p>
-                </div>
-            </div>
-             <div class="mt-6 flex justify-end">
-                <button id="close-modal-btn-bottom" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-2 px-4 rounded">Close</button>
-            </div>
-        </div>
-    </div>
-
-    <footer class="bg-blue-800 text-blue-100 text-center p-5 mt-auto border-t border-blue-700">
-        <p class="text-xs">&copy; <span id="current-year"></span> A<span class="ardot-r-style">R</span>DOT. All Rights Reserved. <br> SWZ Decision Support Tool - For Internal Planning & Evaluation Purposes Only.</p>
-    </footer>
-
+<body>
+<header><div class="header-inner"><div><div class="brand">ARDOT Smart Work Zone Decision Support Tool</div></div><div class="version">Planning & Evaluation</div></div></header>
+<div class="shell">
+<nav id="nav">
+<button class="navbtn active" data-page="project">Project Information</button>
+<h3>SWZ Systems</h3>
+<button class="navbtn" data-page="system" data-system="TQDS">1. Queue Detection<span class="status-dot" id="dot-TQDS"></span></button><button class="navbtn" data-page="system" data-system="TSMS">2. Speed Monitoring<span class="status-dot" id="dot-TSMS"></span></button><button class="navbtn" data-page="system" data-system="TCEAS">3. Equipment Alert<span class="status-dot" id="dot-TCEAS"></span></button><button class="navbtn" data-page="system" data-system="TTTS">4. Travel Time<span class="status-dot" id="dot-TTTS"></span></button><button class="navbtn" data-page="system" data-system="TIDSS">5. Incident Detection<span class="status-dot" id="dot-TIDSS"></span></button><button class="navbtn" data-page="system" data-system="TOHWS">6. Over-height Warning<span class="status-dot" id="dot-TOHWS"></span></button><button class="navbtn" data-page="system" data-system="DLMS">7. Dynamic Lane Merge<span class="status-dot" id="dot-DLMS"></span></button><button class="navbtn" data-page="system" data-system="VSLS">8. Variable Speed<span class="status-dot" id="dot-VSLS"></span></button>
+<h3>Results</h3><button class="navbtn" data-page="summary">Summary</button>
+</nav>
+<main>
+<section id="page-project" class="page active">
+<div class="card"><h1>Project Information</h1>
+<div class="tool-note">Enter the project information and available project conditions. Shared conditions are reused automatically across applicable system evaluations.</div>
+<div class="grid3" id="project-fields">
+<label class="field">Project / Job Name<input type="text" data-project="projectName"></label>
+<label class="field">ARDOT Job Number<input type="text" data-project="jobNumber"></label>
+<label class="field">Route<input type="text" data-project="route"></label>
+<label class="field">Evaluator<input type="text" data-project="evaluator"></label>
+<label class="field">Evaluation Date<input type="date" data-project="evaluationDate"></label>
+<label class="field">Functional Class<select data-project="functionalClass"><option value=""></option><option>Interstate</option><option>Freeway/expressway</option><option>Major arterial</option><option>Other</option></select></label>
+<label class="field">AADT / ADT<input type="number" min="0" step="1" data-project="adt"></label>
+</div>
+<h3>Project Conditions</h3>
+<p class="small">Enter available traffic and safety analysis values. These inputs will automatically populate matching factors in the system evaluations.</p>
+<div class="grid3">
+<label class="field">Work-Zone Duration (months)<input type="number" min="0" step="0.1" data-project="workZoneMonths"></label>
+<label class="field">Truck Percentage (%)<input type="number" min="0" max="100" step="0.1" data-project="truckPct"></label>
+<label class="field">Projected Maximum Queue (mi)<input type="number" min="0" step="0.1" data-project="projectedQueueMiles"></label>
+<label class="field">Projected Queue Duration (h)<input type="number" min="0" step="0.1" data-project="projectedQueueHours"></label>
+<label class="field">Projected Average Delay (min)<input type="number" min="0" step="0.1" data-project="projectedDelayMin"></label>
+<label class="field">Predicted Total Work-Zone Crashes<input type="number" min="0" step="0.01" data-project="predictedCrashes"></label>
+<label class="field">Predicted Fatal/Injury Work-Zone Crashes<input type="number" min="0" step="0.01" data-project="predictedFICrashes"></label>
+<label class="field">Large Speed Variation<select data-project="speedVariation"><option value=""></option><option value="no">No</option><option value="yes">Yes</option></select></label>
+</div>
+<details class="more-details"><summary>Additional Project Details</summary>
+<div class="grid3">
+<label class="field">County<input type="text" data-project="county"></label>
+<label class="field">District<input type="text" data-project="district"></label>
+<label class="field">Project Limits<input type="text" data-project="limits"></label>
+<label class="field">Construction Phase<input type="text" data-project="phase"></label>
+<label class="field">Construction Start<input type="date" data-project="constructionStart"></label>
+<label class="field">Construction End<input type="date" data-project="constructionEnd"></label>
+<label class="field">Existing Travel Lanes<input type="number" min="0" step="1" data-project="lanesExisting"></label>
+<label class="field">Open Lanes During Critical Stage<input type="number" min="0" step="1" data-project="lanesOpen"></label>
+<label class="field">Posted / Operating Speed (mph)<input type="number" min="0" step="1" data-project="speed"></label>
+</div>
+<label class="field" style="margin-top:12px">Analysis Notes / Data Source<textarea data-project="conditionSource"></textarea></label>
+<label class="field" style="margin-top:12px">Project Notes<textarea data-project="projectNotes"></textarea></label>
+</details>
+<div class="btnrow no-print"><button class="action primary" id="go-first">Begin Evaluation</button><button class="action danger" id="new-eval">Start New Evaluation</button></div></div>
+</section>
+<section id="page-system" class="page"></section>
+<section id="page-summary" class="page"><div class="card"><h1>Summary</h1><p class="lead">Review the screening results and final decisions. Scores are interpreted within each system and should not be compared directly across technologies.</p><div id="summary-content"></div><div class="btnrow no-print"><button class="action primary" id="print-report">Print / Save Evaluation Report</button><button class="action secondary" id="back-project">Project Information</button></div></div></section>
+</main>
+</div><footer>ARDOT Smart Work Zone Decision Support Tool • Final deployment requires engineering judgment.</footer>
 <script>
-    const { jsPDF } = window.jspdf;
+const SYSTEMS={"TQDS":{"id":"TQDS","name":"Temporary Queue Detection System","short":"Queue Detection","rawMax":100,"normalizer":100,"description":"Screens the need for detecting queues/slow traffic and warning approaching motorists.","gates":[{"id":"gate1","question":"Is the work zone expected to create recurring, temporary, or otherwise meaningful queues, slow traffic, or stopped traffic?"}],"factors":[{"id":"q_len","label":"Projected Queue Length","max":20,"options":[{"label":"<1 mi","score":0},{"label":"1–<3 mi","score":5},{"label":"3–<5 mi","score":10},{"label":"5–<7 mi","score":15},{"label":"≥7 mi","score":20}]},{"id":"q_dur","label":"Queue Duration","max":10,"options":[{"label":"<1 h","score":0},{"label":"1–<2 h","score":3},{"label":"2–<4 h","score":7},{"label":"≥4 h","score":10}]},{"id":"delay","label":"Projected Delay","max":10,"options":[{"label":"<12 min","score":0},{"label":"12–<20 min","score":3},{"label":"20–<30 min","score":7},{"label":"≥30 min","score":10}]},{"id":"wz_dur","label":"Work-zone duration","max":10,"options":[{"label":"<1 month","score":0},{"label":"1–<5 months","score":3},{"label":"5–12 months","score":7},{"label":">12 months","score":10}]},{"id":"crashes","label":"Predicted Total Work-Zone Crashes","max":10,"options":[{"label":"<1","score":0},{"label":"1–<2","score":2},{"label":"2–<3","score":5},{"label":"3–<4","score":8},{"label":"≥4","score":10}]},{"id":"fi_crashes","label":"Predicted Fatal/Injury Work-Zone Crashes","max":10,"options":[{"label":"<0.25","score":0},{"label":"0.25–<0.5","score":2},{"label":"0.5–<0.75","score":5},{"label":"0.75–<1","score":8},{"label":"≥1","score":10}]},{"id":"sight","label":"Back-of-Queue Sight Distance","max":8,"options":[{"label":"Minimal","score":0},{"label":"Moderate","score":5},{"label":"High","score":8}]},{"id":"func","label":"Functional Class","max":4,"options":[{"label":"Other","score":0},{"label":"Major arterial","score":2},{"label":"Freeway/expressway","score":3},{"label":"Interstate","score":4}]},{"id":"generator","label":"Traffic Generator Impact","max":4,"options":[{"label":"Minimal","score":0},{"label":"Moderate","score":2},{"label":"High","score":4}]},{"id":"issues","label":"Existing traffic issues","max":4,"options":[{"label":"Minimal","score":0},{"label":"Moderate","score":2},{"label":"High","score":4}]},{"id":"alternate","label":"Viable Alternate Route","max":4,"options":[{"label":"No","score":0},{"label":"Yes","score":4}]},{"id":"complex","label":"Complex Traffic Layout","max":2,"options":[{"label":"No","score":0},{"label":"Yes","score":2}]},{"id":"merge","label":"Merging Conflicts / Hazards","max":2,"options":[{"label":"No","score":0},{"label":"Yes","score":2}]},{"id":"weather","label":"Weather Impact","max":2,"options":[{"label":"Minimal","score":0},{"label":"Moderate","score":1},{"label":"High","score":2}]}]},"TSMS":{"id":"TSMS","name":"Temporary Speed Monitoring System","short":"Speed Monitoring","rawMax":231,"normalizer":231,"description":"Screens the need for temporary speed monitoring or driver feedback in the work zone.","gates":[{"id":"gate1","question":"Is speed compliance or speed management a meaningful concern because of chronic speeding, large speed variation, queues/traffic issues, geometric complexity, or related work-zone conditions?"}],"factors":[{"id":"func_adt","label":"Functional Class / ADT","max":50,"options":[{"label":"Interstate: ADT ≥50,000","score":50},{"label":"Interstate: ADT 20,000–<50,000","score":30},{"label":"Interstate: ADT <20,000","score":0},{"label":"Freeway/expressway: ADT ≥100,000","score":50},{"label":"Freeway/expressway: ADT 20,000–<100,000","score":30},{"label":"Freeway/expressway: ADT <20,000","score":0},{"label":"Major arterial: ADT ≥50,000","score":30},{"label":"Major arterial: ADT 20,000–<50,000","score":10},{"label":"Major arterial: ADT <20,000","score":0},{"label":"Other: ADT ≥20,000","score":10},{"label":"Other: ADT <20,000","score":0}]},{"id":"wz_dur","label":"Work-zone duration","max":10,"options":[{"label":"<1 month","score":0},{"label":"1–12 months","score":5},{"label":">12 months","score":10}]},{"id":"generator","label":"Traffic Generator Impact","max":10,"options":[{"label":"None","score":0},{"label":"Minimal","score":3},{"label":"Moderate","score":6},{"label":"Significant","score":10}]},{"id":"q_len","label":"Projected Queue Length","max":10,"options":[{"label":"None","score":0},{"label":">0–3.5 mi","score":3},{"label":">3.5–7 mi","score":7},{"label":">7 mi","score":10}]},{"id":"sight","label":"Back-of-Queue Sight Distance","max":3,"options":[{"label":"No","score":0},{"label":"Yes","score":3}]},{"id":"issues","label":"Existing traffic issues","max":30,"options":[{"label":"Not applicable","score":0},{"label":"Higher-than-normal crashes, gridlock, or frequent ramp backups","score":30}]},{"id":"merge","label":"Merging Conflicts / Hazards","max":3,"options":[{"label":"No","score":0},{"label":"Yes","score":3}]},{"id":"complex","label":"Complex Traffic Layout","max":3,"options":[{"label":"No","score":0},{"label":"Yes","score":3}]},{"id":"speeding","label":"Chronic speeding","max":50,"options":[{"label":"No","score":0},{"label":"History of chronic speeds >20 mph above limit","score":50}]},{"id":"speedvar","label":"Large Speed Variation","max":50,"options":[{"label":"No","score":0},{"label":"Yes","score":50}]},{"id":"adjacent","label":"Adjacent/consecutive project","max":3,"options":[{"label":"<2 mi or <6 months","score":0},{"label":"2–<5 mi or 6–<12 months","score":1},{"label":"5–10 mi or 1–2 years","score":2},{"label":">10 mi or >2 years","score":3}]},{"id":"lane_restrict","label":"Scattered/short-term lane restrictions","max":3,"options":[{"label":"No","score":0},{"label":"Yes","score":3}]},{"id":"heavy","label":"Truck Percentage","max":3,"options":[{"label":"<6%","score":0},{"label":"6–<9%","score":1},{"label":"9–<12%","score":2},{"label":"≥12%","score":3}]},{"id":"construction","label":"Construction Vehicle Entry / Exit","max":3,"options":[{"label":"No","score":0},{"label":"Yes","score":3}]}]},"TCEAS":{"id":"TCEAS","name":"Temporary Construction Equipment Alert System","short":"Equipment Alert","rawMax":100,"normalizer":100,"description":"Screens the need to warn motorists about slow-moving construction vehicles entering/exiting live traffic.","gates":[{"id":"gate1","question":"Will slow-moving construction vehicles or equipment enter, exit, cross, or merge with live traffic in a way that creates a material speed differential or conflict?"}],"factors":[{"id":"entry","label":"Construction Vehicle Entry Impact","max":20,"options":[{"label":"Minimal","score":0},{"label":"Moderate","score":12},{"label":"High","score":20}]},{"id":"crashes","label":"Predicted Total Work-Zone Crashes","max":10,"options":[{"label":"<1","score":0},{"label":"1–<2","score":2},{"label":"2–<3","score":5},{"label":"3–<4","score":8},{"label":"≥4","score":10}]},{"id":"fi_crashes","label":"Predicted Fatal/Injury Work-Zone Crashes","max":10,"options":[{"label":"<0.25","score":0},{"label":"0.25–<0.5","score":2},{"label":"0.5–<0.75","score":5},{"label":"0.75–<1","score":8},{"label":"≥1","score":10}]},{"id":"func","label":"Functional Class","max":8,"options":[{"label":"Other","score":0},{"label":"Major arterial","score":3},{"label":"Freeway/expressway","score":6},{"label":"Interstate","score":8}]},{"id":"merge","label":"Merging Conflicts / Hazards","max":8,"options":[{"label":"No","score":0},{"label":"Yes","score":8}]},{"id":"speeding","label":"Speeding Issues","max":8,"options":[{"label":"No","score":0},{"label":"Yes","score":8}]},{"id":"heavy","label":"Truck Percentage","max":6,"options":[{"label":"≤3%","score":0},{"label":">3–<6%","score":2},{"label":"6–<12%","score":4},{"label":"≥12%","score":6}]},{"id":"q_len","label":"Projected Queue Length","max":6,"options":[{"label":"<1 mi","score":0},{"label":"1–<3 mi","score":1},{"label":"3–<5 mi","score":2},{"label":"5–<7 mi","score":4},{"label":"≥7 mi","score":6}]},{"id":"wz_dur","label":"Work-zone duration","max":6,"options":[{"label":"<1 month","score":0},{"label":"1–<5 months","score":2},{"label":"5–12 months","score":4},{"label":">12 months","score":6}]},{"id":"complex","label":"Complex traffic layout","max":4,"options":[{"label":"No","score":0},{"label":"Yes","score":4}]},{"id":"issues","label":"Existing traffic issues","max":4,"options":[{"label":"Minimal","score":0},{"label":"Moderate","score":2},{"label":"High","score":4}]},{"id":"weather","label":"Extreme weather","max":4,"options":[{"label":"Minimal","score":0},{"label":"Moderate","score":2},{"label":"High","score":4}]},{"id":"generator","label":"Traffic Generator Impact","max":2,"options":[{"label":"Minimal","score":0},{"label":"Moderate","score":1},{"label":"High","score":2}]},{"id":"nearby","label":"Nearby Roadway Project","max":2,"options":[{"label":"Minimal","score":0},{"label":"Moderate","score":1},{"label":"High","score":2}]},{"id":"speedvar","label":"Large Speed Variation","max":2,"options":[{"label":"No","score":0},{"label":"Yes","score":2}]}]},"TTTS":{"id":"TTTS","name":"Temporary Travel Time System","short":"Travel Time","rawMax":100,"normalizer":100,"description":"Screens the need for real-time work-zone travel-time information.","gates":[{"id":"gate1","question":"Are meaningful or variable work-zone delay/travel-time impacts expected such that real-time information could improve route choice, departure decisions, or traveler expectation management?"}],"factors":[{"id":"delay","label":"Projected Delay","max":18,"options":[{"label":"<12 min","score":0},{"label":"12–<20 min","score":7},{"label":"20–<30 min","score":13},{"label":"≥30 min","score":18}]},{"id":"q_dur","label":"Queue Duration","max":14,"options":[{"label":"<1 h","score":0},{"label":"1–<2 h","score":6},{"label":"2–<4 h","score":10},{"label":"≥4 h","score":14}]},{"id":"alternate","label":"Viable Alternate Route","max":10,"options":[{"label":"No","score":0},{"label":"Yes","score":10}]},{"id":"q_len","label":"Projected Queue Length","max":10,"options":[{"label":"<1 mi","score":0},{"label":"1–<3 mi","score":3},{"label":"3–<5 mi","score":6},{"label":"5–<7 mi","score":8},{"label":"≥7 mi","score":10}]},{"id":"crashes","label":"Predicted Total Work-Zone Crashes","max":8,"options":[{"label":"<1","score":0},{"label":"1–<2","score":2},{"label":"2–<3","score":4},{"label":"3–<4","score":6},{"label":"≥4","score":8}]},{"id":"func","label":"Functional Class","max":8,"options":[{"label":"Other","score":0},{"label":"Major arterial","score":3},{"label":"Freeway/expressway","score":6},{"label":"Interstate","score":8}]},{"id":"issues","label":"Existing traffic issues","max":6,"options":[{"label":"Minimal","score":0},{"label":"Moderate","score":3},{"label":"High","score":6}]},{"id":"fi_crashes","label":"Predicted Fatal/Injury Work-Zone Crashes","max":5,"options":[{"label":"<0.25","score":0},{"label":"0.25–<0.5","score":1},{"label":"0.5–<0.75","score":2.5},{"label":"0.75–<1","score":4},{"label":"≥1","score":5}]},{"id":"sight","label":"Sight distance from back of queue","max":4,"options":[{"label":"Minimal","score":0},{"label":"Moderate","score":2},{"label":"High","score":4}]},{"id":"generator","label":"Nearby traffic generator","max":4,"options":[{"label":"Minimal","score":0},{"label":"Moderate","score":2},{"label":"High","score":4}]},{"id":"wz_dur","label":"Work-zone duration","max":4,"options":[{"label":"<1 month","score":0},{"label":"1–<5 months","score":2},{"label":"5–12 months","score":3},{"label":">12 months","score":4}]},{"id":"emergency","label":"Emergency-responder constraint","max":2,"options":[{"label":"Minimal","score":0},{"label":"Moderate","score":1},{"label":"High","score":2}]},{"id":"heavy","label":"Truck Percentage","max":3,"options":[{"label":"≤3%","score":0},{"label":">3–<6%","score":1},{"label":"6–<12%","score":2},{"label":"≥12%","score":3}]},{"id":"speedvar","label":"Large Speed Variation","max":2,"options":[{"label":"No","score":0},{"label":"Yes","score":2}]},{"id":"weather","label":"Extreme weather","max":2,"options":[{"label":"Minimal","score":0},{"label":"Moderate","score":1},{"label":"High","score":2}]}]},"TIDSS":{"id":"TIDSS","name":"Temporary Incident Detection & Surveillance System","short":"Incident Detection","rawMax":100,"normalizer":100,"description":"Screens the need for rapid detection and verification of incidents/traffic conditions.","gates":[{"id":"gate1","question":"Is rapid detection or verification of incidents/traffic conditions operationally important because of incident exposure, responder constraints, complex work-zone conditions, or insufficient permanent surveillance?"}],"factors":[{"id":"crashes","label":"Predicted Total Work-Zone Crashes","max":14,"options":[{"label":"<1","score":0},{"label":"1–<2","score":3},{"label":"2–<3","score":7},{"label":"3–<4","score":10},{"label":"≥4","score":14}]},{"id":"fi_crashes","label":"Predicted Fatal/Injury Work-Zone Crashes","max":14,"options":[{"label":"<0.25","score":0},{"label":"0.25–<0.5","score":3},{"label":"0.5–<0.75","score":7},{"label":"0.75–<1","score":10},{"label":"≥1","score":14}]},{"id":"emergency","label":"Emergency-responder constraints","max":14,"options":[{"label":"Minimal","score":0},{"label":"Moderate","score":9},{"label":"High","score":14}]},{"id":"delay","label":"Projected Delay","max":10,"options":[{"label":"<12 min","score":0},{"label":"12–<20 min","score":3},{"label":"20–<30 min","score":7},{"label":"≥30 min","score":10}]},{"id":"speedvar","label":"Large Speed Variation","max":8,"options":[{"label":"No","score":0},{"label":"Yes","score":8}]},{"id":"func","label":"Functional Class","max":8,"options":[{"label":"Other","score":0},{"label":"Major arterial","score":3},{"label":"Freeway/expressway","score":6},{"label":"Interstate","score":8}]},{"id":"heavy","label":"Truck Percentage","max":6,"options":[{"label":"≤3%","score":0},{"label":">3–<6%","score":2},{"label":"6–<12%","score":4},{"label":"≥12%","score":6}]},{"id":"issues","label":"Existing traffic issues","max":6,"options":[{"label":"Minimal","score":0},{"label":"Moderate","score":3},{"label":"High","score":6}]},{"id":"q_len","label":"Projected Queue Length","max":4,"options":[{"label":"<1 mi","score":0},{"label":"1–<3 mi","score":1},{"label":"3–<5 mi","score":2},{"label":"5–<7 mi","score":3},{"label":"≥7 mi","score":4}]},{"id":"wz_dur","label":"Work-zone duration","max":4,"options":[{"label":"<1 month","score":0},{"label":"1–<5 months","score":2},{"label":"5–12 months","score":3},{"label":">12 months","score":4}]},{"id":"sight","label":"Sight distance from back of queue","max":4,"options":[{"label":"Minimal","score":0},{"label":"Moderate","score":2},{"label":"High","score":4}]},{"id":"merge","label":"Merging conflicts/hazards","max":2,"options":[{"label":"No","score":0},{"label":"Yes","score":2}]},{"id":"complex","label":"Complex traffic layout","max":2,"options":[{"label":"No","score":0},{"label":"Yes","score":2}]},{"id":"speeding","label":"Speeding Issues","max":2,"options":[{"label":"No","score":0},{"label":"Yes","score":2}]},{"id":"weather","label":"Extreme weather","max":2,"options":[{"label":"Minimal","score":0},{"label":"Moderate","score":1},{"label":"High","score":2}]}]},"TOHWS":{"id":"TOHWS","name":"Temporary Over-height Vehicle Warning System","short":"Over-height Warning","rawMax":100,"normalizer":100,"description":"Screens the need for active warning where a temporary low-clearance condition can conflict with over-height vehicles.","gates":[{"id":"gate1","question":"Will the project create a temporary low-clearance condition that presents a credible conflict with legal-height or permitted over-height vehicles on the mainline, an adjoining roadway/ramp, or a project-related alternate route?"}],"factors":[{"id":"location","label":"Low-Clearance Location","max":100,"options":[{"label":"Nearby alternate route","score":45},{"label":"Adjoining roadway/ramp","score":75},{"label":"Mainline traffic","score":100}]}]},"DLMS":{"id":"DLMS","name":"Dynamic Lane Merge System","short":"Dynamic Lane Merge","rawMax":100,"normalizer":100,"description":"Screens the need for dynamic merge management upstream of work-zone lane reductions.","gates":[{"id":"gate1","question":"Will a multilane facility be reduced by at least one travel lane?"},{"id":"gate2","question":"Are traffic demand or expected queues sufficient to create a meaningful merge concern?"}],"factors":[{"id":"q_len","label":"Projected Queue Length","max":20,"options":[{"label":"<1 mi","score":0},{"label":"1–<3 mi","score":5},{"label":"3–<5 mi","score":10},{"label":"5–<7 mi","score":15},{"label":"≥7 mi","score":20}]},{"id":"merge","label":"Merging Conflicts / Hazards","max":10,"options":[{"label":"No","score":0},{"label":"Yes","score":10}]},{"id":"crashes","label":"Predicted Total Work-Zone Crashes","max":10,"options":[{"label":"<1","score":0},{"label":"1–<2","score":2},{"label":"2–<3","score":5},{"label":"3–<4","score":8},{"label":"≥4","score":10}]},{"id":"fi_crashes","label":"Predicted Fatal/Injury Work-Zone Crashes","max":10,"options":[{"label":"<0.25","score":0},{"label":"0.25–<0.5","score":2},{"label":"0.5–<0.75","score":5},{"label":"0.75–<1","score":8},{"label":"≥1","score":10}]},{"id":"sight","label":"Back-of-Queue Sight Distance","max":10,"options":[{"label":"Minimal","score":0},{"label":"Moderate","score":6},{"label":"High","score":10}]},{"id":"wz_dur","label":"Work-zone duration","max":8,"options":[{"label":"<1 month","score":0},{"label":"1–<5 months","score":3},{"label":"5–12 months","score":6},{"label":">12 months","score":8}]},{"id":"speedvar","label":"Large Speed Variation","max":8,"options":[{"label":"No","score":0},{"label":"Yes","score":8}]},{"id":"func","label":"Functional Class","max":4,"options":[{"label":"Other","score":0},{"label":"Major arterial","score":2},{"label":"Freeway/expressway","score":3},{"label":"Interstate","score":4}]},{"id":"generator","label":"Nearby traffic generator","max":4,"options":[{"label":"Minimal","score":0},{"label":"Moderate","score":2},{"label":"High","score":4}]},{"id":"issues","label":"Existing traffic issues","max":4,"options":[{"label":"Minimal","score":0},{"label":"Moderate","score":2},{"label":"High","score":4}]},{"id":"complex","label":"Complex traffic layout","max":4,"options":[{"label":"No","score":0},{"label":"Yes","score":4}]},{"id":"speeding","label":"Speeding Issues","max":4,"options":[{"label":"No","score":0},{"label":"Yes","score":4}]},{"id":"construction","label":"Construction Vehicle Entry","max":4,"options":[{"label":"No","score":0},{"label":"Yes","score":4}]}]},"VSLS":{"id":"VSLS","name":"Variable Speed Limit System","short":"Variable Speed","rawMax":100,"normalizer":100,"description":"Screens whether project conditions support further evaluation of a variable-speed strategy.","gates":[{"id":"gate1","question":"Will safe or efficient operating speed need to change dynamically because of congestion/queues, work-zone activity or lane closures, speed variability, or weather?"}],"factors":[{"id":"speedvar","label":"Large Speed Variation","max":15,"options":[{"label":"No","score":0},{"label":"Yes","score":15}]},{"id":"speeding","label":"Speeding Issues","max":15,"options":[{"label":"No","score":0},{"label":"Yes","score":15}]},{"id":"crashes","label":"Predicted Total Work-Zone Crashes","max":10,"options":[{"label":"<1","score":0},{"label":"1–<2","score":2},{"label":"2–<3","score":5},{"label":"3–<4","score":8},{"label":"≥4","score":10}]},{"id":"fi_crashes","label":"Predicted Fatal/Injury Work-Zone Crashes","max":10,"options":[{"label":"<0.25","score":0},{"label":"0.25–<0.5","score":2},{"label":"0.5–<0.75","score":5},{"label":"0.75–<1","score":8},{"label":"≥1","score":10}]},{"id":"func","label":"Functional Class","max":10,"options":[{"label":"Other","score":0},{"label":"Major arterial","score":3},{"label":"Freeway/expressway","score":7},{"label":"Interstate","score":10}]},{"id":"issues","label":"Existing traffic issues","max":10,"options":[{"label":"Minimal","score":0},{"label":"Moderate","score":6},{"label":"High","score":10}]},{"id":"complex","label":"Complex traffic layout","max":10,"options":[{"label":"No","score":0},{"label":"Yes","score":10}]},{"id":"q_len","label":"Projected Queue Length","max":8,"options":[{"label":"<1 mi","score":0},{"label":"1–<3 mi","score":2},{"label":"3–<5 mi","score":4},{"label":"5–<7 mi","score":6},{"label":"≥7 mi","score":8}]},{"id":"merge","label":"Merging Conflicts / Hazards","max":4,"options":[{"label":"No","score":0},{"label":"Yes","score":4}]},{"id":"wz_dur","label":"Work-zone duration","max":4,"options":[{"label":"<1 month","score":0},{"label":"1–<5 months","score":2},{"label":"5–12 months","score":3},{"label":">12 months","score":4}]},{"id":"generator","label":"Nearby traffic generator","max":2,"options":[{"label":"Minimal","score":0},{"label":"Moderate","score":1},{"label":"High","score":2}]},{"id":"nearby","label":"Nearby Roadway Project","max":2,"options":[{"label":"Minimal","score":0},{"label":"Moderate","score":1},{"label":"High","score":2}]}]}};
+const TOOL_VERSION='3.1 (September 2026)';
+const STORAGE_KEY='ardot_swz_tool_v3_1_session';
+const DEFAULT_STATE={project:{evaluationDate:new Date().toISOString().slice(0,10)},systems:{}};
+let state=loadState();
+let currentSystem='TQDS';
 
-    const swzSystems = {
-        TQDS: {
-            id: "TQDS", name: "Queue Warning System", description: "Evaluates the need for a system to detect queues and warn approaching motorists, primarily to prevent rear-end collisions. Components typically include sensors, portable changeable message signs (PCMS), and a central processor.", maxPossibleScore: 145,
-            factors: [
-                { id: "TQDS-1", text: "Highway Functional Class & ADT", max: 20, options: [
-                    { text: "Interstate/High Vol Freeway (>35,000 ADT)", score: 20 }, { text: "Major Arterial/Med Vol Freeway (10,000-35,000 ADT)", score: 15 },
-                    { text: "Minor Arterial/Major Collector (3,000-10,000 ADT)", score: 10 }, { text: "Other (<3,000 ADT with known high-risk for queues)", score: 5 }, { text: "Not Applicable/Low Impact", score: 0 } ]},
-                { id: "TQDS-2", text: "Estimated Queue Length/Impact", max: 30, options: [
-                    { text: "Potential for queues >2.5 miles or significant delay (>15 min)", score: 30 }, { text: "1-2.5 miles or moderate delay (7-15 min)", score: 20 },
-                    { text: "0.5-1 mile or minor delay (3-7 min)", score: 10 }, { text: "Minimal queue expected or very short duration", score: 0 } ]},
-                { id: "TQDS-3", text: "Sight Distance at Back of Queue", max: 25, options: [
-                    { text: "Severely restricted (curves, crests, foliage, < stopping sight distance)", score: 25 }, { text: "Moderately restricted", score: 15 },
-                    { text: "Minor/Intermittent restrictions", score: 5 }, { text: "Adequate sight distance", score: 0 } ]},
-                { id: "TQDS-4", text: "Existing Traffic Issues/Crash History", max: 20, options: [
-                    { text: "Documented history of 2+ rear-end or queue-related crashes (last 3-5 yrs)", score: 20 }, { text: "Frequent non-recurring congestion or 1 known queue-related crash", score: 10 },
-                    { text: "Occasional issues reported", score: 5 }, { text: "No known issues", score: 0 } ]},
-                { id: "TQDS-5", text: "Proximity to Major Traffic Generators / Special Events", max: 15, options: [
-                    { text: "Near large event venues, major tourist routes (peak season), large industrial hubs (shift changes)", score: 15 }, { text: "Moderate or less frequent impact", score: 7 },
-                    { text: "Low/No impact", score: 0 } ]},
-                { id: "TQDS-6", text: "Alternate Route Availability & Viability", max: 10, options: [
-                    { text: "No viable alternate routes OR alternates significantly longer (>40% extra time/distance) or on lower class roads", score: 10 },
-                    { text: "Alternate routes exist but inconvenient, not well-known, or add >20% travel time", score: 5 }, { text: "Good, well-signed, and convenient alternate routes available", score: 0 } ]},
-                { id: "TQDS-7", text: "Merging/Taper Conflict or Geometric Hazards in WZ", max: 10, options: [
-                    { text: "Multiple lane merges, short tapers, challenging lane shifts, temp. signals causing abrupt stops, WZ after high-speed curve/crest", score: 10 },
-                    { text: "Standard taper/merge with potential for issues", score: 3 }, { text: "Minimal conflict", score: 0 } ]},
-                { id: "TQDS-8", text: "Project Duration & Phase Complexity", max: 10, options: [
-                    { text: "Long-term (>6 months) with multiple critical traffic shifts OR high-impact short-term project with frequent changes", score: 10 },
-                    { text: "Medium-term (1-6 months) or moderately complex phases", score: 5 }, { text: "Short-term (<1 month) simple setup", score: 0 } ]},
-                { id: "TQDS-9", text: "Upstream Interchange/Major Intersection Density", max: 5, options: [
-                    { text: "High density of interchanges/major intersections upstream (<1 mile) of WZ start, potential blockage", score: 5 },
-                    { text: "Moderate density or minor intersections", score: 2 }, { text: "Low density/no critical intersections", score: 0 } ]}
-            ]
-        },
-        TSMS: {
-            id: "TSMS", name: "Dynamic Speed Feedback Sign", description: "Assesses the need for systems that monitor vehicle speeds and provide feedback to drivers or data for enforcement, aiming to improve speed compliance.", maxPossibleScore: 115,
-            factors: [
-                { id: "TSMS-1", text: "Highway Functional Class & Posted Speed", max: 20, options: [
-                    { text: "Interstate/Freeway (Posted Speed ≥ 65 mph)", score: 20 }, { text: "Major Arterial/Rural Highway (Posted Speed 55-64 mph)", score: 15 },
-                    { text: "Minor Arterial/Collector (Posted Speed 45-54 mph)", score: 10 }, { text: "Lower speed urban/local roads with known speeding issues", score: 5 }, { text: "Not Applicable/Low Impact", score: 0 } ]},
-                { id: "TSMS-2", text: "Worker Exposure & Type of Work Zone", max: 25, options: [
-                    { text: "Workers directly adjacent to live traffic with minimal protection (cones/barrels, flagging)", score: 25 },
-                    { text: "Workers behind temporary barrier but close to traffic / frequent WZ access points", score: 15 },
-                    { text: "Workers well-protected/isolated from traffic", score: 5 }, { text: "No direct worker exposure", score: 0 } ]},
-                { id: "TSMS-3", text: "Documented Speeding Issues / Crash History", max: 20, options: [
-                    { text: "Documented history of speed-related crashes (run-off-road, loss of control) in project area/similar WZs", score: 20 },
-                    { text: "Traffic studies/law enforcement reports: >15% vehicles exceed WZ speed limit by 10+ mph", score: 15 },
-                    { text: "Anecdotal/observed evidence of prevalent speeding", score: 5 }, { text: "No known chronic speeding issues", score: 0 } ]},
-                { id: "TSMS-4", text: "Degree of Speed Reduction Required", max: 15, options: [
-                    { text: "Required speed reduction ≥ 20 mph from pre-WZ speed", score: 15 }, { text: "Required speed reduction 10-15 mph", score: 10 },
-                    { text: "Required speed reduction < 10 mph", score: 3 }, { text: "No speed reduction (advisory speeds only)", score: 0 } ]},
-                { id: "TSMS-5", text: "Work Zone Length & Duration", max: 10, options: [
-                    { text: "Long Work Zone (> 2 miles) OR Long Duration (> 6 months)", score: 10 }, { text: "Medium Length (0.5-2 miles) OR Medium Duration (1-6 months)", score: 5 },
-                    { text: "Short Length/Duration", score: 0 } ]},
-                { id: "TSMS-6", text: "Geometric Complexity / Hazards in WZ", max: 10, options: [
-                    { text: "Sharp curves, lane shifts, narrow lanes, temp. crossovers in WZ, hazardous at higher speeds", score: 10 },
-                    { text: "Moderate geometric challenges", score: 5 }, { text: "Simple, straight WZ layout", score: 0 } ]},
-                { id: "TSMS-7", text: "Proximity to Sensitive Areas", max: 5, options: [
-                    { text: "WZ adjacent to/near schools, residential areas, major pedestrian/cyclist activity (heightened community risk)", score: 5 },
-                    { text: "Not applicable", score: 0 } ]},
-                { id: "TSMS-8", text: "Impact from Local Traffic Generators", max: 5, options: [
-                    { text: "Near large venues (stadiums, event centers) where event traffic may exhibit aggressive driving/higher speeds", score: 5 },
-                    { text: "Moderate impact", score: 2 }, { text: "Low/No impact", score: 0 } ]},
-                { id: "TSMS-9", text: "Large Speed Variations (V85-V15)", max: 5, options: [
-                    { text: "Observed or historically high speed variance (V85-V15 > 15 mph)", score: 5 }, { text: "Moderate variance", score: 2 },
-                    { text: "Low variance", score: 0 } ]}
-            ]
-        },
-        TCEAS: {
-            id: "TCEAS", name: "Construction Equipment Alert System", description: "Evaluates the need for systems to alert motorists to construction vehicles entering/exiting the roadway or moving within the work zone.", maxPossibleScore: 90,
-            factors: [
-                { id: "TCEAS-1", text: "Frequency & Nature of Construction Vehicle Movements", max: 25, options: [
-                    { text: "High frequency of slow-moving equipment entering/exiting active high-speed travel lanes (multiple times/hour/access point) OR frequent crossing of active lanes", score: 25 },
-                    { text: "Moderate frequency or movements primarily from/to shoulder/median", score: 15 }, { text: "Low frequency/well-controlled movements", score: 5 }, { text: "Not Applicable/Low Impact", score: 0 } ]},
-                { id: "TCEAS-2", text: "Sight Distance at Equipment Access Points", max: 20, options: [
-                    { text: "Severely restricted sight distance for drivers approaching active construction access/egress points (curves, crests, vegetation, WZ setup)", score: 20 },
-                    { text: "Moderately restricted", score: 10 }, { text: "Minor restrictions", score: 5 }, { text: "Good visibility", score: 0 } ]},
-                { id: "TCEAS-3", text: "Highway Functional Class & Operating Speed", max: 15, options: [
-                    { text: "Interstate/Freeway or other roads with operating speeds ≥ 60 mph", score: 15 }, { text: "Major Arterial/Rural Highway (operating speeds 50-59 mph)", score: 10 },
-                    { text: "Minor Arterial/Collector (operating speeds 40-49 mph)", score: 5 }, { text: "Lower speed urban/local roads < 40 mph", score: 0 } ]},
-                { id: "TCEAS-4", text: "Complexity of Traffic Layout & WZ Environment", max: 10, options: [
-                    { text: "Complex WZ (lane shifts near access points, temp. diversions, narrow lanes/shoulders limiting avoidance)", score: 10 },
-                    { text: "Moderate complexity", score: 5 }, { text: "Simple WZ layout", score: 0 } ]},
-                { id: "TCEAS-5", text: "Existing Traffic Issues / Crash History", max: 10, options: [
-                    { text: "Documented history of crashes involving construction vehicles or related to unexpected entries/exits in project vicinity/similar ARDOT projects", score: 10 },
-                    { text: "General high crash rate in WZ area (not specifically equipment related)", score: 3 }, { text: "No known specific issues", score: 0 } ]},
-                { id: "TCEAS-6", text: "Percentage of Heavy Vehicles (Non-Construction)", max: 5, options: [
-                    { text: "Existing traffic stream has >15% heavy vehicles (trucks)", score: 5 }, { text: "10-15% heavy vehicles", score: 3 },
-                    { text: "<10% heavy vehicles", score: 0 } ]},
-                { id: "TCEAS-7", text: "Duration of High-Intensity Equipment Activity", max: 5, options: [
-                    { text: "Project involves >3 months of consistent, high-frequency equipment movements in/near live traffic", score: 5 },
-                    { text: "1-3 months of such activity", score: 2 }, { text: "<1 month or intermittent activity", score: 0 } ]},
-                { id: "TCEAS-8", text: "Connected Vehicle (CV) Penetration (Future Consideration, Optional)", max: 3, options: [
-                    { text: "ARDOT has active CV programs and >5% CV penetration verifiable AND equipment can transmit status", score: 3 },
-                    { text: "Low or no CV penetration / no equipment broadcast capability / Not Applicable", score: 0 } ], optional: true }
-            ]
-        },
-        TTTS: {
-            id: "TTTS", name: "Real-time Traveler Information System", description: "Assesses the need for systems that provide drivers with real-time estimated travel times through or around a work zone.", maxPossibleScore: 108,
-            factors: [
-                { id: "TTTS-1", text: "Expected Level & Variability of Delay", max: 25, options: [
-                    { text: "Anticipated delays routinely >20 minutes OR highly variable delays (frequent swings 5 min to 30+ min)", score: 25 },
-                    { text: "Anticipated delays 10-20 minutes OR moderately variable", score: 15 }, { text: "Anticipated delays 5-10 minutes OR somewhat variable", score: 5 },
-                    { text: "Minimal/predictable delays <5 min", score: 0 } ]},
-                { id: "TTTS-2", text: "Highway Functional Class, ADT & Strategic Importance", max: 20, options: [
-                    { text: "Interstate (I-40, I-30) / High Vol Freeway (>30,000 ADT) OR designated Key Tourist/Event Route", score: 20 },
-                    { text: "Major Arterial / Med Vol Freeway (10,000-30,000 ADT) OR Significant Commuter Route", score: 15 },
-                    { text: "Minor Arterial / Major Collector (3,000-10,000 ADT) with known delay issues", score: 10 }, { text: "Other / Not Applicable", score: 0 } ]},
-                { id: "TTTS-3", text: "Availability & Viability of Alternate Routes", max: 20, options: [
-                    { text: "Good, well-signed, reasonably direct alternate routes available where TTTS can inform diversion", score: 20 },
-                    { text: "Alternate routes exist but less convenient/direct or not well known", score: 10 },
-                    { text: "Limited or no viable alternate routes (TTTS primarily for expectation management)", score: 5 }, { text: "Not Applicable (e.g. no significant delay expected)", score: 0 } ]},
-                { id: "TTTS-4", text: "Project Duration & Type of Work Zone", max: 15, options: [
-                    { text: "Long-term project (>6 months) with ongoing significant traffic impacts OR shorter projects with highly disruptive phases", score: 15 },
-                    { text: "Medium-term (1-6 months) with moderate impacts", score: 10 }, { text: "Short-term (<1 month) but with notable expected delays", score: 5 },
-                    { text: "Minimal impact WZ", score: 0 } ]},
-                { id: "TTTS-5", text: "Impact on Local Economy / Major Traffic Generators", max: 10, options: [
-                    { text: "WZ significantly impacts access to major employment centers, commercial districts, hospitals, universities, key tourist destinations/events", score: 10 },
-                    { text: "Moderate impact", score: 5 }, { text: "Low/No specific impact beyond general traffic", score: 0 } ]},
-                { id: "TTTS-6", text: "Existing Traffic Issues / Public Sensitivity", max: 10, options: [
-                    { text: "Documented history of frequent congestion, public complaints about delays, or high media sensitivity on this route", score: 10 },
-                    { text: "Occasional congestion or some public awareness", score: 5 }, { text: "No significant existing issues or sensitivity", score: 0 } ]},
-                { id: "TTTS-7", text: "Integration/Complement to Existing ITS", max: 5, options: [
-                    { text: "TTTS can provide data to or be logically co-located with existing ITS (DMS, IDriveArkansas, signals)", score: 5 },
-                    { text: "Standalone deployment with limited integration opportunities", score: 1 }, { text: "No integration opportunities / Not Applicable", score: 0 } ]},
-                { id: "TTTS-8", text: "Extreme Weather Impact on Travel Time", max: 3, options: [
-                    { text: "Corridor prone to sudden weather (flash floods, fog, heavy rain) significantly impacting travel times, TTTS could reflect this", score: 3 },
-                    { text: "Minimal erratic weather impact / Not Applicable", score: 0 } ]}
-            ]
-        },
-        TIDSS: {
-            id: "TIDSS", name: "Incident Management System", description: "Evaluates the need for systems (e.g., cameras) to detect incidents quickly, improve situational awareness, and aid in response management.", maxPossibleScore: 103,
-            factors: [
-                { id: "TIDSS-1", text: "Highway Functional Class, ADT & Strategic Importance", max: 20, options: [
-                    { text: "Interstate/High Vol Freeway (>30,000 ADT) OR route with historically long incident clearance times", score: 20 },
-                    { text: "Major Arterial/Med Vol Freeway (10,000-30,000 ADT) OR designated critical freight/evacuation route", score: 15 },
-                    { text: "Minor Arterial/Major Collector (3,000-10,000 ADT) with known safety/incident concerns", score: 10 }, { text: "Other / Not Applicable", score: 0 } ]},
-                { id: "TIDSS-2", text: "Likelihood & Consequence of Incidents / Crash History", max: 20, options: [
-                    { text: "Documented high crash rate (esp. secondary, injury/fatal) OR frequent non-recurring congestion due to incidents", score: 20 },
-                    { text: "Moderate crash rate or history of significant but less frequent incidents", score: 10 },
-                    { text: "Corridor prone to weather-related incidents (fog, localized ice)", score: 5 }, { text: "Low incident history", score: 0 } ]},
-                { id: "TIDSS-3", text: "Geometric Complexity & Sight Distance Limitations within WZ", max: 20, options: [
-                    { text: "Complex WZ layout (crossovers, shifts, narrow lanes) AND/OR significantly restricted sight distances (curves, crests, barriers)", score: 20 },
-                    { text: "Moderate complexity OR some sight distance issues", score: 10 }, { text: "Simple layout with good visibility", score: 0 } ]},
-                { id: "TIDSS-4", text: "Emergency Responder Access & Response Time Challenges", max: 15, options: [
-                    { text: "Known constraints on emergency vehicle access to/through WZ OR average response times for area above desired thresholds", score: 15 },
-                    { text: "Potential for access constraints or moderate response times", score: 7 }, { text: "Good access and typically rapid response", score: 0 } ]},
-                { id: "TIDSS-5", text: "Worker Safety & Work Zone Security Considerations", max: 10, options: [
-                    { text: "High worker exposure to live traffic OR WZ has specific security concerns (theft, vandalism, unauthorized entry) surveillance could mitigate", score: 10 },
-                    { text: "Moderate worker exposure or general security needs", score: 5 }, { text: "Minimal exposure/security concerns", score: 0 } ]},
-                { id: "TIDSS-6", text: "Project Duration & Criticality of Phases", max: 10, options: [
-                    { text: "Long-term project (>6 months) OR project with multiple, extended critical phases requiring high operational reliability", score: 10 },
-                    { text: "Medium-term (1-6 months) OR fewer critical phases", score: 5 }, { text: "Short-term (<1 month) project", score: 0 } ]},
-                { id: "TIDSS-7", text: "Need for Traffic Condition Verification & Management", max: 5, options: [
-                    { text: "Frequent need for verification of reported traffic conditions (TMC ops, public info, dynamic queue/diversion management)", score: 5 },
-                    { text: "Occasional need for verification", score: 2 }, { text: "Minimal need", score: 0 } ]},
-                { id: "TIDSS-8", text: "Adjacent/Consecutive Projects", max: 3, options: [
-                    { text: "WZ is part of a series of adjacent/consecutive projects, increasing overall corridor disruption and incident likelihood", score: 3 },
-                    { text: "Not applicable or standalone project", score: 0 } ]}
-            ]
-        },
-        TOHWS: {
-            id: "TOHWS", name: "Over-height Vehicle Warning System", description: "Assesses the need for systems to detect and warn over-height vehicles approaching a temporary low-clearance structure.", maxPossibleScore: 100,
-            factors: [
-                { id: "TOHWS-1", text: "Presence of Temporary Reduced Vertical Clearance Below Critical Threshold", max: 60, options: [
-                    { text: "Temporary vertical clearance below ARDOT legal minimum OR below typical height of known permitted loads on route", score: 60 },
-                    { text: "Temporary clearance above legal minimum but below normal permanent clearance AND on route with frequent over-height permit loads", score: 30 },
-                    { text: "No temporary reduced vertical clearance below critical threshold", score: 0 } ]},
-                { id: "TOHWS-2", text: "Availability of a Safe Egress/Diversion Route Before Hazard", max: 20, options: [
-                    { text: "Clearly marked, safe egress point (ramp, turnaround, suitable side road) exists between warning and low clearance", score: 20 },
-                    { text: "Limited or less ideal egress options exist", score: 5 },
-                    { text: "No safe/practical egress before hazard (warning only, diversion ineffective)", score: 0 } ]},
-                { id: "TOHWS-3", text: "Potential Consequences of an Over-height Vehicle Impact", max: 15, options: [
-                    { text: "High consequences (critical structural damage, extended full closure, significant safety risk, major project delay >1 week)", score: 15 },
-                    { text: "Moderate consequences (notable damage, partial/short-term closure, moderate project delay)", score: 7 },
-                    { text: "Low consequences", score: 0 } ]},
-                { id: "TOHWS-4", text: "Volume of Truck Traffic / Known Over-height Load Frequency", max: 5, options: [
-                    { text: "Route carries high volume of truck traffic (>25% ADTT) OR designated route for frequent over-height permitted loads", score: 5 },
-                    { text: "Moderate truck traffic (10-25% ADTT) or occasional over-height loads", score: 2 }, { text: "Low truck traffic / Not Applicable", score: 0 } ]},
-                { id: "TOHWS-5", text: "Inadequacy of Standard Signage Alone (Optional Engineering Judgment)", max: 5, options: [
-                    { text: "Standard static low-clearance signage deemed insufficient (approach geometry, driver expectancy, high speeds, complex visual environment)", score: 5 },
-                    { text: "Standard signage likely adequate / Not Applicable", score: 0 } ], optional: true }
-            ]
-        },
-        DLMS: {
-            id: "DLMS", name: "Dynamic Lane Merge System", description: "Evaluates the need for systems that encourage motorists to use all available lanes up to the merge point during congestion (zipper merge).", maxPossibleScore: 110,
-            factors: [
-                { id: "DLMS-1", text: "Traffic Demand & Congestion Levels", max: 30, options: [
-                    { text: "Lane closure on facility where PHV/open lane >1000-1200 vphpl OR routine queuing >0.5 mile anticipated", score: 30 },
-                    { text: "PHV 750-1000 vphpl OR occasional moderate queues expected", score: 15 }, { text: "Lower volumes/minimal queue impact", score: 0 } ]},
-                { id: "DLMS-2", text: "Roadway Type & Number of Lanes", max: 25, options: [
-                    { text: "Multi-lane divided highway (Interstate, Freeway, 4+ lane divided) reducing by at least one lane", score: 25 },
-                    { text: "Not applicable (e.g., 2-lane road, no lane reduction)", score: 0 } ]},
-                { id: "DLMS-3", text: "Duration of Lane Closure", max: 20, options: [
-                    { text: "Lane closure continuous or extended periods daily for > 4 weeks", score: 20 },
-                    { text: "Closure for 1-4 weeks OR highly repetitive shorter closures (daily for a week)", score: 10 },
-                    { text: "Intermittent/very short-term closures (<1 week total)", score: 0 } ]},
-                { id: "DLMS-4", text: "Anticipated Reduction in Queue Length / Delay", max: 15, options: [
-                    { text: "Analysis/experience suggests DLM could reduce typical queue lengths by >25% or significantly improve travel time reliability", score: 15 },
-                    { text: "Potential for moderate queue reduction (10-25%)", score: 7 }, { text: "Minor or uncertain benefit", score: 0 } ]},
-                { id: "DLMS-5", text: "Upstream/Downstream Impacts & Interchange Density", max: 10, options: [
-                    { text: "Lane closure/queue frequently impacts upstream/downstream interchange ramps, major intersections, critical access points", score: 10 },
-                    { text: "Some potential for ramp/intersection impacts", score: 5 }, { text: "Minimal interaction with other critical junctions", score: 0 } ]},
-                { id: "DLMS-6", text: "Public Information & Education Feasibility", max: 5, options: [
-                    { text: "Project allows for coordinated public information campaign (ARDOT channels, media, project outreach) to explain DLM", score: 5 },
-                    { text: "Limited opportunity for specific outreach", score: 0 } ]},
-                { id: "DLMS-7", text: "Safety Benefits (Reduced Aggressive Merging / Speed Differentials)", max: 5, options: [
-                    { text: "WZ type/location has history of, or high potential for, aggressive merging, sideswipes, or rear-ends related to early merging queues", score: 5 },
-                    { text: "Moderate potential for such safety issues", score: 2 }, { text: "Low potential", score: 0 } ]}
-            ]
-        },
-        VSLS: {
-            id: "VSLS", name: "Variable Speed Limit System", description: "Assesses the need for systems that dynamically adjust speed limits based on real-time traffic, weather, or work zone conditions.", maxPossibleScore: 108,
-            factors: [
-                { id: "VSLS-1", text: "Crash History & Type (Speed, Weather, or Queue-Related)", max: 25, options: [
-                    { text: "Documented history of significant speed-related, weather-related (rain, fog, ice), or secondary (queue-related) crashes VSL could mitigate", score: 25 },
-                    { text: "Moderate history or strong potential based on similar sites", score: 15 }, { text: "Some potential but limited historical data", score: 5 },
-                    { text: "Low crash history of these types", score: 0 } ]},
-                { id: "VSLS-2", text: "Recurring Congestion & Queue Formation", max: 20, options: [
-                    { text: "Facility experiences regular, predictable periods of heavy congestion leading to significant queue formation and speed differentials", score: 20 },
-                    { text: "Experiences occasional or less predictable congestion with notable speed variations", score: 10 },
-                    { text: "Infrequent or minor congestion", score: 0 } ]},
-                { id: "VSLS-3", text: "Frequency of Adverse Weather Affecting Speeds/Safety", max: 20, options: [
-                    { text: "Location prone to frequent adverse weather (dense fog, heavy rain, ice, snow) significantly impacting safe operating speeds/visibility", score: 20 },
-                    { text: "Occasional adverse weather events impacting safety", score: 10 }, { text: "Infrequent or minor weather impacts", score: 0 } ]},
-                { id: "VSLS-4", text: "Work Zone Characteristics (If Applicable for Temporary VSL)", max: 15, options: [
-                    { text: "For WZ: Active worker presence with high exposure, frequent changes in traffic patterns, lane closures on high-speed roads, or dynamic queue presence", score: 15 },
-                    { text: "WZ with moderate hazards or some worker exposure", score: 7 }, { text: "Static WZ with minimal dynamic risks / Not for WZ", score: 0 } ]},
-                { id: "VSLS-5", text: "Roadway Functional Class & Operating Speeds", max: 10, options: [
-                    { text: "Interstate/Freeway or other high-speed multi-lane facility (Posted Speed ≥ 60 mph)", score: 10 },
-                    { text: "Major Arterial (Posted Speed 50-59 mph) with documented speed variance issues", score: 5 }, { text: "Other facilities / Not Applicable", score: 0 } ]},
-                { id: "VSLS-6", text: "Availability of Supporting ITS Infrastructure & Data", max: 10, options: [
-                    { text: "Real-time traffic data (speed, volume, occupancy) AND/OR weather data (visibility, precipitation, road surface from RWIS) readily available and integrable", score: 10 },
-                    { text: "Some data available but requires significant integration effort or new sensor deployment", score: 3 },
-                    { text: "Limited or no real-time data sources", score: 0 } ]},
-                { id: "VSLS-7", text: "Potential for Speed Harmonization & Reduced Speed Variance", max: 5, options: [
-                    { text: "Engineering judgment: high potential for VSL to reduce speed variance (heavy merging/weaving, upstream of bottlenecks)", score: 5 },
-                    { text: "Moderate potential for harmonization", score: 2 }, { text: "Low potential", score: 0 } ]},
-                { id: "VSLS-8", text: "Upstream/Downstream Coordination Potential", max: 3, options: [
-                    { text: "Opportunity to coordinate VSL with other traffic management strategies (ramp metering, DMS, TQDS, DLM) or across jurisdictions", score: 3 },
-                    { text: "Limited coordination opportunities", score: 0 } ]}
-            ]
-        }
-    };
-
-    let currentPage = 'instructions-page';
-    let currentSystemId = null;
-    let systemScores = {};
-    let activeSystemChart = null; 
-    let summaryChartInstance = null;
-
-    const pageContents = document.querySelectorAll('.page-content');
-    const navButtons = document.querySelectorAll('.nav-button');
-    const factorsContainer = document.getElementById('factors-container');
-    const systemNamePlaceholder = document.getElementById('system-name-placeholder');
-    const systemDescriptionPlaceholder = document.getElementById('system-description-placeholder');
-    const currentSystemRawScoreEl = document.getElementById('current-system-raw-score');
-    const currentSystemMaxScoreEl = document.getElementById('current-system-max-score');
-    const currentSystemNormalizedScoreEl = document.getElementById('current-system-normalized-score');
-    const currentSystemRecommendationEl = document.getElementById('current-system-recommendation');
-    const summaryTableBody = document.getElementById('summary-table-body');
-    const mobileMenuButton = document.getElementById('mobile-menu-button');
-    const mainNav = document.getElementById('main-nav');
-    const resetSystemScoresButton = document.getElementById('reset-system-scores');
-    const resetAllScoresButton = document.getElementById('reset-all-scores');
-    const landingResetButton = document.getElementById('landing-reset-button');
-    const pdfButton = document.getElementById('generate-pdf-button');
-    const nextSystemButton = document.getElementById('next-system-button');
-    const prevSystemButton = document.getElementById('prev-system-button');
-    const evalAllButton = document.getElementById('eval-all-to-summary');
-    
-    const infoModal = document.getElementById('info-modal');
-    const closeModalButton = document.getElementById('close-modal-button');
-    const closeModalBtnBottom = document.getElementById('close-modal-btn-bottom');
-    const modalSystemName = document.getElementById('modal-system-name');
-    const modalSystemDesc = document.getElementById('modal-system-desc');
-    const projectNameInput = document.getElementById('project-name-input');
-    const projectDescInput = document.getElementById('project-desc-input');
-
-    document.addEventListener('DOMContentLoaded', () => {
-        initializeScores();
-        loadProjectDetails(); // Load saved details
-        navigateToPage('instructions-page');
-        updateSummaryTable(); 
-        renderSummaryChart(); 
-        
-        navButtons.forEach(button => {
-            button.addEventListener('click', () => {
-                const pageId = button.dataset.page;
-                currentSystemId = button.dataset.system || null;
-                navigateToPage(pageId, currentSystemId);
-                if (mainNav.classList.contains('sm:block') === false && !mainNav.classList.contains('hidden')) {
-                    mainNav.classList.add('hidden');
-                }
-            });
-        });
-
-        mobileMenuButton.addEventListener('click', () => {
-            mainNav.classList.toggle('hidden');
-            mainNav.classList.toggle('block');
-        });
-        
-        document.getElementById('current-year').textContent = new Date().getFullYear();
-
-        if(resetSystemScoresButton) {
-            resetSystemScoresButton.addEventListener('click', handleResetSystemScores);
-        }
-        if(resetAllScoresButton) {
-            resetAllScoresButton.addEventListener('click', handleResetAllScores);
-        }
-        if(landingResetButton) {
-            landingResetButton.addEventListener('click', handleResetAllScores);
-        }
-        if(pdfButton) {
-            pdfButton.addEventListener('click', handleGeneratePdf);
-        }
-        if(nextSystemButton) {
-            nextSystemButton.addEventListener('click', handleNextSystem);
-        }
-        if(prevSystemButton) {
-            prevSystemButton.addEventListener('click', handlePrevSystem);
-        }
-        if(evalAllButton) {
-            evalAllButton.addEventListener('click', () => navigateToPage('summary-page'));
-        }
-        
-        // Listeners for inputs
-        if(projectNameInput) projectNameInput.addEventListener('input', saveProjectDetails);
-        if(projectDescInput) projectDescInput.addEventListener('input', saveProjectDetails);
-
-        // Modal listeners
-        if(closeModalButton) closeModalButton.addEventListener('click', () => infoModal.classList.add('hidden'));
-        if(closeModalBtnBottom) closeModalBtnBottom.addEventListener('click', () => infoModal.classList.add('hidden'));
-        infoModal.addEventListener('click', (e) => {
-            if (e.target === infoModal) infoModal.classList.add('hidden');
-        });
-    });
-
-    function initializeScores() {
-        Object.keys(swzSystems).forEach(sysId => {
-            systemScores[sysId] = {};
-            swzSystems[sysId].factors.forEach(factor => {
-                const savedScore = sessionStorage.getItem(`${sysId}-${factor.id}`);
-                systemScores[sysId][factor.id] = savedScore !== null ? parseInt(savedScore, 10) : 0;
-            });
-        });
-    }
-
-    function saveProjectDetails() {
-        sessionStorage.setItem('project-name', projectNameInput.value);
-        sessionStorage.setItem('project-desc', projectDescInput.value);
-    }
-
-    function loadProjectDetails() {
-        const name = sessionStorage.getItem('project-name');
-        const desc = sessionStorage.getItem('project-desc');
-        if(name) projectNameInput.value = name;
-        if(desc) projectDescInput.value = desc;
-    }
-    
-    function saveScore(systemId, factorId, score) {
-        sessionStorage.setItem(`${systemId}-${factorId}`, score);
-    }
-
-    function clearSystemScoresFromStorage(systemId) {
-        swzSystems[systemId].factors.forEach(factor => {
-            sessionStorage.removeItem(`${systemId}-${factor.id}`);
-        });
-    }
-
-    function clearAllScoresFromStorage() {
-         Object.keys(swzSystems).forEach(sysId => {
-            clearSystemScoresFromStorage(sysId);
-        });
-        sessionStorage.removeItem('project-name');
-        sessionStorage.removeItem('project-desc');
-        projectNameInput.value = '';
-        projectDescInput.value = '';
-    }
-
-    function handleResetSystemScores() {
-        const systemToResetId = currentSystemId; 
-        if (systemToResetId && swzSystems[systemToResetId]) {
-            clearSystemScoresFromStorage(systemToResetId);
-            
-            systemScores[systemToResetId] = {}; 
-            swzSystems[systemToResetId].factors.forEach(factor => {
-                 systemScores[systemToResetId][factor.id] = 0; 
-            });
-            
-            if (currentPage === 'system-evaluation-page' && currentSystemId === systemToResetId) {
-                renderSystemEvaluationPage(systemToResetId); 
-            }
-            
-            updateSummaryTable(); 
-            renderSummaryChart(); 
-        }
-    }
-
-    function handleResetAllScores() {
-        if (confirm("Confirm reset of scores and project details? This action cannot be undone.")) {
-            clearAllScoresFromStorage();
-            initializeScores(); 
-            
-            if (currentPage === 'system-evaluation-page' && currentSystemId) {
-                renderSystemEvaluationPage(currentSystemId); 
-            } else if (currentPage === 'evaluate-all-page') {
-                renderEvaluateAllPage();
-            }
-            updateSummaryTable(); 
-            renderSummaryChart(); 
-        }
-    }
-
-    function handleNextSystem() {
-        const systemKeys = Object.keys(swzSystems);
-        const currentIndex = systemKeys.indexOf(currentSystemId);
-        
-        if (currentIndex < systemKeys.length - 1) {
-            const nextSystemId = systemKeys[currentIndex + 1];
-            navigateToPage('system-evaluation-page', nextSystemId);
-        } else {
-            navigateToPage('summary-page');
-        }
-    }
-    
-    function handlePrevSystem() {
-        const systemKeys = Object.keys(swzSystems);
-        const currentIndex = systemKeys.indexOf(currentSystemId);
-        
-        if (currentIndex > 0) {
-            const prevSystemId = systemKeys[currentIndex - 1];
-            navigateToPage('system-evaluation-page', prevSystemId);
-        } else {
-            navigateToPage('instructions-page');
-        }
-    }
-
-    function showSystemInfo(sysId) {
-        const system = swzSystems[sysId];
-        modalSystemName.innerHTML = system.name;
-        // Replace ARDOT with styled span
-        modalSystemDesc.innerHTML = system.description.replace(/ARDOT/g, 'A<span class="ardot-r-style">R</span>DOT');
-        infoModal.classList.remove('hidden');
-    }
-
-    function handleGeneratePdf() {
-        const doc = new jsPDF();
-        const today = new Date().toLocaleDateString();
-        const projName = sessionStorage.getItem('project-name') || "Untitled Project";
-        const projDesc = sessionStorage.getItem('project-desc') || "";
-        
-        // Header
-        doc.setFontSize(18);
-        doc.setTextColor("#1d4ed8"); 
-        doc.text("ARDOT SWZ Decision Support Tool - Summary Report", 14, 20);
-
-        doc.setFontSize(10);
-        doc.setTextColor("#374151");
-        doc.text(`Report Generated: ${today}`, 14, 28);
-        doc.text(`Project: ${projName}`, 14, 33);
-        
-        if (projDesc) {
-            doc.setFontSize(9);
-            const descLines = doc.splitTextToSize(projDesc, 180);
-            doc.text(descLines, 14, 38);
-            var startY = 40 + (descLines.length * 4);
-        } else {
-            var startY = 38;
-        }
-
-        doc.setFontSize(9);
-        doc.setTextColor("#000000");
-        doc.text("Notice: This report is an aid for decision-making and does not replace engineering judgment.", 14, startY);
-        startY += 5;
-        doc.text("Thresholds: >=70% Strongly Recommended | 30-69% Considered | <30% Not Recommended", 14, startY);
-        startY += 7;
-
-        // Summary Table
-        const summaryBody = [];
-        Object.keys(swzSystems).forEach(sysId => {
-            const system = swzSystems[sysId];
-            const scores = calculateScores(sysId);
-            const rec = getRecommendation(scores.normalizedScore);
-            summaryBody.push([system.name, `${scores.normalizedScore}%`, rec.text]);
-        });
-
-        doc.autoTable({
-            startY: startY,
-            head: [['SWZ System', 'Score', 'Recommendation']],
-            body: summaryBody,
-            theme: 'striped',
-            headStyles: { fillColor: [29, 78, 216] }, 
-            columnStyles: { 2: { fontStyle: 'bold' } },
-            didParseCell: function(data) {
-                 if (data.section === 'body' && data.column.index === 2) {
-                     const text = data.cell.raw;
-                     if (text === 'Strongly Recommended') data.cell.styles.textColor = [22, 163, 74];
-                     else if (text === 'Considered') data.cell.styles.textColor = [202, 138, 4];
-                     else data.cell.styles.textColor = [220, 38, 38];
-                 }
-            }
-        });
-
-        let currentY = doc.lastAutoTable.finalY + 10;
-
-        // Detailed Assessments
-        doc.addPage();
-        currentY = 20;
-        doc.setFontSize(14);
-        doc.setTextColor("#1d4ed8");
-        doc.text("Detailed System Assessments", 14, currentY);
-        currentY += 10;
-
-        Object.keys(swzSystems).forEach(sysId => {
-            const system = swzSystems[sysId];
-            const scores = calculateScores(sysId);
-            const rec = getRecommendation(scores.normalizedScore);
-            
-            if (currentY > 250) {
-                doc.addPage();
-                currentY = 20;
-            }
-
-            doc.setFontSize(12);
-            doc.setTextColor("#000000");
-            doc.setFont(undefined, 'bold');
-            doc.text(`${system.name}`, 14, currentY);
-            doc.setFont(undefined, 'normal');
-            doc.setFontSize(10);
-            doc.text(`Score: ${scores.normalizedScore}% - ${rec.text}`, 14, currentY + 5);
-            currentY += 10;
-            
-            doc.setFontSize(9);
-            doc.setTextColor("#4b5563");
-            const descLines = doc.splitTextToSize(system.description, 180);
-            doc.text(descLines, 14, currentY);
-            currentY += (descLines.length * 4) + 5;
-
-            const factorBody = system.factors.map(f => {
-                const selectedScore = systemScores[sysId][f.id];
-                const selectedOption = f.options.find(o => o.score === selectedScore);
-                return [f.text, selectedOption ? selectedOption.text : '-', `${selectedScore}/${f.max}`];
-            });
-
-            doc.autoTable({
-                startY: currentY,
-                head: [['Factor', 'Selected Condition', 'Score']],
-                body: factorBody,
-                theme: 'grid',
-                headStyles: { fillColor: [107, 114, 128] }, 
-                styles: { fontSize: 8 },
-                columnStyles: { 0: { cellWidth: 60 }, 1: { cellWidth: 100 } }
-            });
-            
-            currentY = doc.lastAutoTable.finalY + 15;
-        });
-
-        const dateStr = new Date().toISOString().slice(0, 10);
-        doc.save(`ARDOT_SWZ_Full_Report_${dateStr}.pdf`);
-    }
-
-    function navigateToPage(pageId, systemId = null) {
-        currentPage = pageId;
-        pageContents.forEach(page => page.classList.add('hidden'));
-        document.getElementById(pageId).classList.remove('hidden');
-
-        navButtons.forEach(btn => {
-            btn.classList.remove('active'); 
-            if (btn.dataset.page === pageId) {
-                if(pageId === 'system-evaluation-page') {
-                     if(btn.dataset.system === systemId) btn.classList.add('active');
-                } else {
-                     btn.classList.add('active');
-                }
-            }
-        });
-
-        if (pageId === 'system-evaluation-page' && systemId) {
-            currentSystemId = systemId;
-            renderSystemEvaluationPage(systemId);
-        } else if (pageId === 'summary-page') {
-            updateSummaryTable();
-            renderSummaryChart();
-        } else if (pageId === 'evaluate-all-page') {
-            renderEvaluateAllPage();
-        }
-        
-        const mainArea = document.querySelector('.main-content-area');
-        if (mainArea) mainArea.scrollTo(0,0);
-        window.scrollTo(0,0);
-    }
-
-    function renderEvaluateAllPage() {
-        const container = document.getElementById('all-systems-container');
-        container.innerHTML = '';
-
-        const uniqueFactorsMap = new Map();
-
-        Object.keys(swzSystems).forEach(sysId => {
-            const system = swzSystems[sysId];
-            system.factors.forEach(factor => {
-                const optionsSignature = JSON.stringify(factor.options.map(o => o.text)); 
-                const key = factor.text + "|" + optionsSignature;
-
-                if (!uniqueFactorsMap.has(key)) {
-                    uniqueFactorsMap.set(key, {
-                        text: factor.text,
-                        options: factor.options,
-                        optional: factor.optional,
-                        targets: []
-                    });
-                }
-                uniqueFactorsMap.get(key).targets.push({ sysId: sysId, factorId: factor.id });
-            });
-        });
-
-        let factorIndex = 0;
-        uniqueFactorsMap.forEach((uniqueFactor, key) => {
-             const factorEl = document.createElement('div');
-             factorEl.className = 'p-4 border border-gray-200 rounded-lg bg-gray-50';
-             let optionsHTML = `<fieldset><legend class="block text-sm font-semibold text-gray-800 mb-2">${uniqueFactor.text} ${uniqueFactor.optional ? '<span class="text-xs text-amber-700">(Optional)</span>' : ''}</legend> <div class="mt-2 space-y-2">`;
-             
-             const firstTarget = uniqueFactor.targets[0];
-             const currentScore = systemScores[firstTarget.sysId][firstTarget.factorId];
-
-             uniqueFactor.options.forEach((option, index) => {
-                const optionId = `eval-${factorIndex}-${index}`;
-                const isChecked = option.score === currentScore;
-                optionsHTML += `
-                    <label for="${optionId}" class="flex items-center p-2 border border-gray-300 rounded hover:border-blue-400 cursor-pointer transition-colors ${isChecked ? 'bg-blue-50 border-blue-400' : 'bg-white'}">
-                        <input type="radio" id="${optionId}" name="eval-factor-${factorIndex}" value="${option.score}" ${isChecked ? 'checked' : ''}
-                               class="text-blue-600 focus:ring-blue-500 h-4 w-4 border-gray-300">
-                        <span class="ml-3 text-sm text-gray-700">${option.text} <span class="font-semibold text-blue-600">(${option.score} pts)</span></span>
-                    </label>
-                `;
-             });
-             optionsHTML += `</div></fieldset>`;
-             factorEl.innerHTML = optionsHTML;
-             container.appendChild(factorEl);
-
-             const radios = factorEl.querySelectorAll(`input[name="eval-factor-${factorIndex}"]`);
-             radios.forEach(r => {
-                 r.addEventListener('change', (e) => {
-                      const val = parseInt(e.target.value, 10);
-                      
-                      uniqueFactor.targets.forEach(target => {
-                          systemScores[target.sysId][target.factorId] = val;
-                          saveScore(target.sysId, target.factorId, val);
-                      });
-                      
-                      radios.forEach(rb => rb.closest('label').className = 'flex items-center p-2 border border-gray-300 rounded hover:border-blue-400 cursor-pointer transition-colors bg-white');
-                      e.target.closest('label').className = 'flex items-center p-2 border border-gray-300 rounded hover:border-blue-400 cursor-pointer transition-colors bg-blue-50 border-blue-400';
-                 });
-             });
-
-             factorIndex++;
-        });
-    }
-    
-    function syncCommonFactors(factorText, optionText, scoreVal) {
-        Object.keys(swzSystems).forEach(sId => {
-            swzSystems[sId].factors.forEach(f => {
-                if (f.text === factorText) {
-                    f.options.forEach((o, idx) => {
-                        if (o.text === optionText) {
-                            systemScores[sId][f.id] = o.score;
-                            saveScore(sId, f.id, o.score);
-                            
-                            const r = document.getElementById(`eval-${f.id}-${idx}`);
-                            if(r) {
-                                r.checked = true;
-                                const group = document.querySelectorAll(`input[name="eval-${f.id}"]`);
-                                group.forEach(gr => gr.closest('label').className = 'flex items-center p-2 border border-gray-300 rounded hover:border-blue-400 cursor-pointer transition-colors bg-white');
-                                r.closest('label').className = 'flex items-center p-2 border border-gray-300 rounded hover:border-blue-400 cursor-pointer transition-colors bg-blue-50 border-blue-400';
-                            }
-                        }
-                    });
-                }
-            });
-        });
-    }
-
-    function renderSystemEvaluationPage(systemId) {
-        const system = swzSystems[systemId];
-        if (!system) return;
-
-        systemNamePlaceholder.innerHTML = system.name;
-        systemDescriptionPlaceholder.innerHTML = system.description.replace(/ARDOT/g, 'A<span class="ardot-r-style">R</span>DOT');
-        factorsContainer.innerHTML = '';
-
-        system.factors.forEach(factor => {
-            const factorEl = document.createElement('div');
-            factorEl.className = 'p-5 border border-gray-200 rounded-lg shadow-sm bg-gray-50';
-            
-            let optionsHTML = `<fieldset><legend class="block text-md font-semibold text-gray-800 mb-2">${factor.text} ${factor.optional ? '<span class="text-xs text-amber-700">(Optional)</span>' : ''}</legend> <div class="mt-2 space-y-2.5">`;
-            
-            const currentFactorScore = systemScores[systemId][factor.id];
-
-            factor.options.forEach((option, index) => {
-                const optionId = `${factor.id}-option-${index}`;
-                const isChecked = option.score === currentFactorScore;
-                optionsHTML += `
-                    <label for="${optionId}" class="factor-option flex items-center p-3 border border-gray-300 rounded-md hover:border-blue-400 hover:shadow-sm cursor-pointer transition-all duration-150 ${isChecked ? 'bg-blue-100 border-blue-500 ring-2 ring-blue-500' : 'bg-white'}">
-                        <input type="radio" id="${optionId}" name="${factor.id}" value="${option.score}" ${isChecked ? 'checked' : ''}
-                               class="focus:ring-blue-500 h-4 w-4 text-blue-600 border-gray-300">
-                        <span class="ml-3 text-sm text-gray-700">${option.text} <span class="font-semibold text-blue-600">(${option.score} pts)</span></span>
-                    </label>
-                `;
-            });
-            optionsHTML += `</div></fieldset>`;
-            factorEl.innerHTML = optionsHTML;
-            factorsContainer.appendChild(factorEl);
-
-            const radioButtons = factorEl.querySelectorAll(`input[name="${factor.id}"]`);
-            radioButtons.forEach(radio => {
-                radio.addEventListener('change', (e) => {
-                    systemScores[systemId][factor.id] = parseInt(e.target.value, 10);
-                    saveScore(systemId, factor.id, parseInt(e.target.value, 10));
-                    updateSystemScoresDisplay(systemId);
-                    radioButtons.forEach(rb => {
-                        rb.closest('label').classList.remove('bg-blue-100', 'border-blue-500', 'ring-2', 'ring-blue-500');
-                        rb.closest('label').classList.add('bg-white');
-                    });
-                    e.target.closest('label').classList.add('bg-blue-100', 'border-blue-500', 'ring-2', 'ring-blue-500');
-                    e.target.closest('label').classList.remove('bg-white');
-                });
-            });
-        });
-        updateSystemScoresDisplay(systemId);
-
-        const systemKeys = Object.keys(swzSystems);
-        const currentIndex = systemKeys.indexOf(systemId);
-        if (currentIndex < systemKeys.length - 1) {
-            nextSystemButton.innerHTML = 'Next System &rarr;';
-        } else {
-            nextSystemButton.innerHTML = 'Go to Summary &rarr;';
-        }
-        
-        if (currentIndex === 0) {
-            prevSystemButton.innerHTML = '&larr; Instructions';
-        } else {
-            prevSystemButton.innerHTML = '&larr; Previous System';
-        }
-    }
-
-    function calculateScores(systemId) {
-        const system = swzSystems[systemId];
-        let rawScore = 0;
-        system.factors.forEach(factor => {
-            rawScore += systemScores[systemId][factor.id] || 0;
-        });
-        const normalizedScore = system.maxPossibleScore > 0 ? Math.round((rawScore / system.maxPossibleScore) * 100) : 0;
-        return { rawScore, normalizedScore, maxPossible: system.maxPossibleScore };
-    }
-
-    function updateSystemScoresDisplay(systemId) {
-        const scores = calculateScores(systemId);
-        currentSystemRawScoreEl.textContent = scores.rawScore;
-        currentSystemMaxScoreEl.textContent = scores.maxPossible;
-        currentSystemNormalizedScoreEl.textContent = scores.normalizedScore;
-        
-        const rec = getRecommendation(scores.normalizedScore);
-        currentSystemRecommendationEl.innerHTML = `Recommendation: <span class="${rec.colorClass} font-bold">${rec.text}</span>`;
-        
-        renderCurrentSystemChart(systemId, scores.normalizedScore);
-    }
-    
-    function updateSummaryTable() {
-        summaryTableBody.innerHTML = ''; 
-        Object.keys(swzSystems).forEach(sysId => {
-            const system = swzSystems[sysId];
-            const scores = calculateScores(sysId);
-            const recommendation = getRecommendation(scores.normalizedScore);
-
-            const row = summaryTableBody.insertRow();
-            row.innerHTML = `
-                <td class="px-6 py-4 whitespace-normal text-sm font-medium text-blue-600 hover:text-blue-800 cursor-pointer" onclick="showSystemInfo('${sysId}')">${system.name} <span class="text-xs text-gray-400 ml-1">🛈</span></td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 text-center">${scores.normalizedScore}%</td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold ${recommendation.colorClass}">${recommendation.text}</td>
-            `;
-        });
-    }
-
-    function getRecommendation(normalizedScore) {
-        if (normalizedScore >= 70) return { text: "Strongly Recommended", colorClass: "text-green-600", pdfColor: [22, 163, 74] };
-        if (normalizedScore >= 30) return { text: "Considered", colorClass: "text-yellow-600", pdfColor: [202, 138, 4] };
-        return { text: "Not Recommended", colorClass: "text-red-600", pdfColor: [220, 38, 38] };
-    }
+// Every option receives a stable key. State stores the key—not the point value—so equal-point
+// alternatives remain distinguishable in the UI, saved state, and printed audit trail.
+Object.values(SYSTEMS).forEach(sys=>sys.factors.forEach(f=>f.options.forEach((o,i)=>{o.key=`${f.id}__${i}`;})));
 
 
-    function renderCurrentSystemChart(systemId, normalizedScore) {
-        const canvasEl = document.getElementById('current-system-chart');
-        if (!canvasEl) return;
-        const ctx = canvasEl.getContext('2d');
+function clone(o){return JSON.parse(JSON.stringify(o));}
+function loadState(){try{const x=sessionStorage.getItem(STORAGE_KEY);return x?JSON.parse(x):clone(DEFAULT_STATE);}catch(e){return clone(DEFAULT_STATE);}}
+function saveState(){try{sessionStorage.setItem(STORAGE_KEY,JSON.stringify(state));}catch(e){}updateNavDots();}
+function ensureSystem(id){if(!state.systems[id]) state.systems[id]={gates:{},factors:{},engineeringDecision:'',engineeringComment:''};return state.systems[id];}
+Object.keys(SYSTEMS).forEach(ensureSystem);
 
-        if (activeSystemChart) { 
-            activeSystemChart.destroy();
-            activeSystemChart = null; 
-        }
+function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function num(v){if(v===undefined||v===null||v==='')return null;const n=Number(v);return Number.isFinite(n)?n:null;}
+function optionByKey(f,key){return f.options.find(o=>o.key===key)||null;}
+function optionKeyAt(f,i){return f.options[i]?f.options[i].key:null;}
+function gateResponseLabel(v){return v==='yes'?'Yes':v==='no'?'No':v==='unknown'?'Unknown / Information Needed':'Unanswered';}
+function gateStatusLabel(v){return v==='applicable'?'Applicable':v==='na'?'Not Applicable / Not Indicated':v==='needs'?'Needs Information':'Not Evaluated';}
+function feasValueLabel(v){return v==='pass'?'Acceptable':v==='issue'?'Needs Review':'Not Reviewed';}
+function feasDisplay(v){return v==='Pass'?'Acceptable':v==='Issue'?'Needs Review':'Not Reviewed';}
+function decisionLabel(v){return v==='Selected'?'Select':v==='Not Selected'?'Do Not Select':v||'—';}
 
-        activeSystemChart = new Chart(ctx, { 
-            type: 'doughnut',
-            data: {
-                labels: ['Normalized Score', 'Remaining'],
-                datasets: [{
-                    data: [normalizedScore, Math.max(0, 100 - normalizedScore)],
-                    backgroundColor: ['#2563eb', '#e5e7eb'], 
-                    borderColor: ['#2563eb', '#e5e7eb'],
-                    borderWidth: 1,
-                    circumference: 180, 
-                    rotation: 270      
-                }]
-            },
-            options: {
-                responsive: true, maintainAspectRatio: false, cutout: '70%',
-                plugins: {
-                    legend: { display: false }, tooltip: { enabled: false },
-                    title: { 
-                        display: true, 
-                        text: `${normalizedScore}%`, 
-                        position: 'top', 
-                        align: 'center', 
-                        font: { 
-                            size: 14, 
-                            weight: 'bold' 
-                        }, 
-                        color: '#2563eb', 
-                        padding: { 
-                            top: 70 
-                        } 
-                    }
-                },
-                animation: { animateScale: true, animateRotate: true }
-            }
-        });
-    }
+function recommendation(score){if(score>65)return{text:'High Priority for Consideration',cls:'b-high'};if(score>=33)return{text:'Further Evaluation / Consideration',cls:'b-mid'};return{text:'Low Priority / Not Indicated',cls:'b-low'};}
+function gateStatus(id){const sys=SYSTEMS[id],st=ensureSystem(id),vals=sys.gates.map(g=>st.gates[g.id]||null);if(vals.some(v=>v==='no'))return 'na';if(vals.some(v=>v==='unknown'))return 'needs';if(vals.every(v=>v==='yes'))return 'applicable';return 'not-evaluated';}
 
-    function renderSummaryChart() {
-        const canvasEl = document.getElementById('summary-systems-chart');
-        if(!canvasEl) return;
-        const ctx = canvasEl.getContext('2d');
-        const labels = [];
-        const data = [];
-        const backgroundColors = [];
+function derivedOptionKey(id,f){
+ const p=state.project||{};
+ const fc=p.functionalClass||'';
+ const adt=num(p.adt), months=num(p.workZoneMonths), trucks=num(p.truckPct), qmi=num(p.projectedQueueMiles), qh=num(p.projectedQueueHours), delay=num(p.projectedDelayMin), crashes=num(p.predictedCrashes), fi=num(p.predictedFICrashes);
+ if(f.id==='func' && fc){const map={'Other':0,'Major arterial':1,'Freeway/expressway':2,'Interstate':3};return map[fc]!==undefined?optionKeyAt(f,map[fc]):null;}
+ if(f.id==='func_adt' && fc && adt!==null){let i=null;if(fc==='Interstate')i=adt>=50000?0:adt>=20000?1:2;else if(fc==='Freeway/expressway')i=adt>=100000?3:adt>=20000?4:5;else if(fc==='Major arterial')i=adt>=50000?6:adt>=20000?7:8;else if(fc==='Other')i=adt>=20000?9:10;return i===null?null:optionKeyAt(f,i);}
+ if(f.id==='wz_dur' && months!==null){if(id==='TSMS')return optionKeyAt(f,months<1?0:months<=12?1:2);return optionKeyAt(f,months<1?0:months<5?1:months<=12?2:3);}
+ if(f.id==='q_len' && qmi!==null){if(id==='TSMS')return optionKeyAt(f,qmi<=0?0:qmi<=3.5?1:qmi<=7?2:3);return optionKeyAt(f,qmi<1?0:qmi<3?1:qmi<5?2:qmi<7?3:4);}
+ if(f.id==='q_dur' && qh!==null)return optionKeyAt(f,qh<1?0:qh<2?1:qh<4?2:3);
+ if(f.id==='delay' && delay!==null)return optionKeyAt(f,delay<12?0:delay<20?1:delay<30?2:3);
+ if(f.id==='crashes' && crashes!==null)return optionKeyAt(f,crashes<1?0:crashes<2?1:crashes<3?2:crashes<4?3:4);
+ if(f.id==='fi_crashes' && fi!==null)return optionKeyAt(f,fi<0.25?0:fi<0.5?1:fi<0.75?2:fi<1?3:4);
+ if(f.id==='heavy' && trucks!==null){if(id==='TSMS')return optionKeyAt(f,trucks<6?0:trucks<9?1:trucks<12?2:3);return optionKeyAt(f,trucks<=3?0:trucks<6?1:trucks<12?2:3);}
+ if(f.id==='speedvar' && (p.speedVariation==='yes'||p.speedVariation==='no'))return optionKeyAt(f,p.speedVariation==='yes'?1:0);
+ return null;
+}
+function effectiveChoiceKey(id,f,st){return derivedOptionKey(id,f)??st.factors[f.id]??null;}
+function selectedOption(id,f,st){return optionByKey(f,effectiveChoiceKey(id,f,st));}
+function inputOrigin(id,f,st){return derivedOptionKey(id,f)!==null?'Shared Project Conditions':'Module response';}
 
-        Object.keys(swzSystems).forEach(sysId => {
-            labels.push(swzSystems[sysId].id);
-            const scores = calculateScores(sysId);
-            data.push(scores.normalizedScore);
-            const rec = getRecommendation(scores.normalizedScore);
-            backgroundColors.push(`rgba(${rec.pdfColor[0]}, ${rec.pdfColor[1]}, ${rec.pdfColor[2]}, 0.8)`);
-        });
+function result(id){
+ const sys=SYSTEMS[id],st=ensureSystem(id),gs=gateStatus(id);
+ if(gs==='needs')return{status:'Needs Information',kind:'needs',score:null,raw:null,complete:false};
+ if(gs==='na')return{status:'Not Applicable / Not Indicated',kind:'na',score:null,raw:null,complete:true};
+ if(gs!=='applicable')return{status:'Not Evaluated',kind:'not',score:null,raw:null,complete:false};
+ const unanswered=sys.factors.filter(f=>!selectedOption(id,f,st));
+ if(unanswered.length)return{status:`Scoring Incomplete (${unanswered.length} item${unanswered.length===1?'':'s'})`,kind:'needs',score:null,raw:null,complete:false,unanswered};
+ const raw=sys.factors.reduce((a,f)=>a+Number(selectedOption(id,f,st).score),0);
+ const score=Math.min(100,Math.round((raw/sys.normalizer*100)*10)/10),rec=recommendation(score);
+ return{status:rec.text,kind:score>65?'high':score>=33?'mid':'low',score,raw,complete:true,rec};
+}
 
-        if (summaryChartInstance) {
-            summaryChartInstance.destroy();
-        }
+function evaluationIssues(){
+ const issues=[],p=state.project||{};
+ [['projectName','Project / Job Name'],['jobNumber','ARDOT Job Number'],['evaluator','Evaluator'],['evaluationDate','Evaluation Date']].forEach(([k,l])=>{if(!String(p[k]??'').trim())issues.push(`${l} is missing.`);});
+ Object.keys(SYSTEMS).forEach(id=>{const gs=gateStatus(id),r=result(id),st=ensureSystem(id);
+   if(gs==='not-evaluated')issues.push(`${id}: applicability screening is not complete.`);
+   if(gs==='needs')issues.push(`${id}: applicability requires additional information.`);
+   if(gs==='applicable'&&!r.complete)issues.push(`${id}: ${r.status}.`);
+   if((gs==='applicable'||gs==='na')&&!st.engineeringDecision)issues.push(`${id}: final engineering determination is not recorded.`);
+   if(st.engineeringDecision&&!st.engineeringComment.trim())issues.push(`${id}: engineering determination requires written justification.`);
+ });
+ return issues;
+}
+function readiness(){const issues=evaluationIssues();return{complete:issues.length===0,issues};}
 
-        summaryChartInstance = new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: labels,
-                datasets: [{
-                    label: 'Normalized Score (%)', data: data, backgroundColor: backgroundColors,
-                    borderColor: backgroundColors.map(color => color.replace('0.8', '1')), borderWidth: 1
-                }]
-            },
-            options: {
-                indexAxis: 'y', responsive: true, maintainAspectRatio: false,
-                scales: {
-                    x: { beginAtZero: true, max: 100, title: { display: true, text: 'Normalized Score (%)', font: {size: 12, weight: '500'} }, grid: { color: '#e5e7eb'} },
-                    y: { ticks: { autoSkip: false, font: {size: 10} }, grid: { display: false } }
-                },
-                plugins: {
-                    legend: { display: false },
-                    title: { display: true, text: 'SWZ Systems Normalized Score Comparison', font: {size: 16, weight: '600'}, padding: {bottom: 15} },
-                    tooltip: { 
-                        backgroundColor: '#1f2937', 
-                        titleFont: { weight: 'bold'},
-                        bodyFont: { size: 12 },
-                        callbacks: { label: function(context) { return `${context.dataset.label}: ${context.raw}%`; } } 
-                    }
-                }
-            }
-        });
-    }
+function showPage(page,systemId){document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));document.querySelectorAll('.navbtn').forEach(x=>x.classList.remove('active'));document.getElementById('page-'+page).classList.add('active');if(page==='system'){currentSystem=systemId||currentSystem;renderSystem(currentSystem);document.querySelector(`.navbtn[data-system="${currentSystem}"]`)?.classList.add('active');}else{document.querySelector(`.navbtn[data-page="${page}"]`)?.classList.add('active');if(page==='summary')renderSummary();}window.scrollTo({top:0,behavior:'smooth'});}
+document.querySelectorAll('.navbtn').forEach(b=>b.addEventListener('click',()=>showPage(b.dataset.page,b.dataset.system)));
+document.getElementById('go-first').onclick=()=>showPage('system','TQDS');document.getElementById('back-project').onclick=()=>showPage('project');
+
+document.querySelectorAll('[data-project]').forEach(el=>{const k=el.dataset.project;el.value=state.project[k]??'';el.addEventListener('input',()=>{state.project[k]=el.value;saveState();});el.addEventListener('change',()=>{state.project[k]=el.value;saveState();});});
+document.getElementById('new-eval').onclick=()=>{if(confirm('Start a new evaluation? All responses in this tab will be cleared.')){state=clone(DEFAULT_STATE);state.project.evaluationDate=new Date().toISOString().slice(0,10);Object.keys(SYSTEMS).forEach(ensureSystem);try{sessionStorage.removeItem(STORAGE_KEY);}catch(e){}document.querySelectorAll('[data-project]').forEach(el=>el.value=state.project[el.dataset.project]??'');saveState();showPage('project');}};
+
+function renderSystem(id){
+ const sys=SYSTEMS[id],st=ensureSystem(id),r=result(id),page=document.getElementById('page-system');
+ const gateHtml=sys.gates.map(g=>{const v=st.gates[g.id]||'';return `<div class="gate"><div class="gate-question">${esc(g.question)}</div><div class="radio-row">${[['yes','Yes'],['no','No'],['unknown','Information Needed']].map(([val,l])=>`<label><input type="radio" name="${id}-${g.id}" value="${val}" ${v===val?'checked':''}> ${l}</label>`).join('')}</div></div>`;}).join('');
+ let body='';
+ if(gateStatus(id)==='applicable'){
+   body=`<div class="card"><h2>Scoring Factors</h2><div id="factor-list">${sys.factors.map(f=>factorHtml(id,f,st)).join('')}</div><div id="score-panel">${scorePanel(id)}</div></div>${engineeringHtml(id)}`;
+ } else if(gateStatus(id)==='na'){body=`<div class="card"><div class="note">This system is <b>Not Applicable / Not Indicated</b> based on the applicability response.</div></div>${engineeringHtml(id)}`;}
+ else if(gateStatus(id)==='needs'){body=`<div class="card"><div class="note warning"><b>Needs Information.</b> Resolve the applicability question before scoring.</div></div>`;}
+ else{body=`<div class="card"><div class="note">Complete the applicability question above to continue.</div></div>`;}
+ page.innerHTML=`<div class="card"><h1>${id} – ${esc(sys.name)}</h1><p class="lead">${esc(sys.description)}</p><h3>Applicability</h3>${gateHtml}</div>${body}<div class="btnrow no-print"><button class="action secondary" id="reset-system">Reset This System</button><button class="action primary" id="next-system">Next</button></div>`;
+ page.querySelectorAll('.gate input').forEach(inp=>inp.addEventListener('change',()=>{st.gates[inp.name.split('-').pop()]=inp.value;saveState();renderSystem(id);}));
+ page.querySelectorAll('[data-factor]').forEach(inp=>inp.addEventListener('change',()=>{if(!inp.disabled){st.factors[inp.dataset.factor]=inp.value;saveState();renderSystem(id);}}));
+ const ed=page.querySelector('#engineering-decision'),ec=page.querySelector('#engineering-comment');if(ed)ed.addEventListener('change',()=>{st.engineeringDecision=ed.value;saveState();renderSystem(id);});if(ec)ec.addEventListener('input',()=>{st.engineeringComment=ec.value;saveState();});
+ page.querySelector('#reset-system').onclick=()=>{if(confirm(`Reset ${id} responses?`)){state.systems[id]={gates:{},factors:{},engineeringDecision:'',engineeringComment:''};saveState();renderSystem(id);}};
+ page.querySelector('#next-system').onclick=()=>{const keys=Object.keys(SYSTEMS),i=keys.indexOf(id);i<keys.length-1?showPage('system',keys[i+1]):showPage('summary');};
+}
+function factorHtml(id,f,st){
+ const derived=derivedOptionKey(id,f),locked=derived!==null,cur=effectiveChoiceKey(id,f,st);
+ return `<div class="factor"><div class="factor-title">${esc(f.label)}${locked?'<span class="autofill">FROM PROJECT CONDITIONS</span>':''}</div><div class="option-grid">${f.options.map(o=>`<label class="option ${cur===o.key?'selected':''} ${locked?'locked':''}"><input type="radio" data-factor="${f.id}" name="${id}-${f.id}" value="${o.key}" ${cur===o.key?'checked':''} ${locked?'disabled':''}><span>${esc(o.label)}</span><span class="pts">${o.score} pts</span></label>`).join('')}</div>${locked?'<div class="locked-note">Change this value on the Project Information page.</div>':''}</div>`;
+}
+function scorePanel(id){const r=result(id);if(r.score===null)return `<div class="note warning">${esc(r.status)}</div>`;return `<div class="scorebox"><div><div class="scorevalue">${r.score.toFixed(1)}</div><div class="scoremeta">Score / 100</div></div><div><span class="badge ${r.rec.cls}">${esc(r.rec.text)}</span><div class="small" style="margin-top:7px">&gt;65 High Priority &nbsp;•&nbsp; 33–65 Further Evaluation &nbsp;•&nbsp; &lt;33 Low Priority</div></div></div>`;}
+function engineeringHtml(id){const st=ensureSystem(id),r=result(id),gs=gateStatus(id),canDetermine=(gs==='na')||(gs==='applicable'&&r.complete),needsComment=!!st.engineeringDecision;return `<div class="card"><h2>Final Decision</h2>${!canDetermine?'<div class="note warning">Complete the applicability and scoring questions before recording a final decision.</div>':''}<div class="grid2"><label class="field">Decision<select id="engineering-decision" ${canDetermine?'':'disabled'}><option value=""></option><option value="Selected" ${st.engineeringDecision==='Selected'?'selected':''}>Select</option><option value="Further Study" ${st.engineeringDecision==='Further Study'?'selected':''}>Further Study</option><option value="Not Selected" ${st.engineeringDecision==='Not Selected'?'selected':''}>Do Not Select</option></select></label><div class="field">Screening Result<div style="margin-top:10px">${r.score===null?esc(r.status):`<span class="badge ${r.rec.cls}">${esc(r.rec.text)}</span>`}</div></div></div><label class="field" style="margin-top:12px">Comments / Justification ${needsComment?'<span style="color:#b42318">(required)</span>':''}<textarea id="engineering-comment">${esc(st.engineeringComment)}</textarea></label>${needsComment&&!st.engineeringComment.trim()?'<div class="note bad">Enter comments or justification before finalizing the evaluation.</div>':''}</div>`;}
+
+function updateNavDots(){Object.keys(SYSTEMS).forEach(id=>{const d=document.getElementById('dot-'+id),r=result(id);if(!d)return;d.className='status-dot';if(r.kind==='na')d.classList.add('na');else if(r.kind==='needs'||r.kind==='not')d.classList.add('need');else if(r.score!==null)d.classList.add('done');});}
+function renderSummary(){
+ const rd=readiness();
+ const status=`<div class="status-card ${rd.complete?'complete':'draft'}"><b>${rd.complete?'Evaluation Complete':'Draft / Incomplete'}</b>${rd.complete?'':'<br><span class="small">Resolve the items below before finalizing the evaluation.</span>'}</div>`;
+ const rows=Object.keys(SYSTEMS).map(id=>{const s=SYSTEMS[id],r=result(id),st=ensureSystem(id),gs=gateStatus(id),activeDecision=(gs==='applicable'||gs==='na')?decisionLabel(st.engineeringDecision):'—';return `<tr><td><b>${id}</b><br><span class="small">${esc(s.short)}</span></td><td>${esc(gateStatusLabel(gs))}</td><td>${r.score===null?'—':r.score.toFixed(1)}</td><td>${esc(r.status)}</td><td>${esc(activeDecision)}</td></tr>`;}).join('');
+ document.getElementById('summary-content').innerHTML=`${status}<table class="summary-table"><thead><tr><th>System</th><th>Applicability</th><th>Score</th><th>Screening Result</th><th>Final Decision</th></tr></thead><tbody>${rows}</tbody></table>${summaryIssues()}`;
+}
+function summaryIssues(){const issues=evaluationIssues();return issues.length?`<div class="card" style="margin-top:16px"><h3>Items Requiring Attention</h3><ul>${issues.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></div>`:`<div class="card" style="margin-top:16px"><div class="note good"><b>No unresolved items.</b></div></div>`;}
+
+function reportHtml(){
+ const p=state.project,rd=readiness(),banner=rd.complete?'COMPLETED EVALUATION':'DRAFT — INCOMPLETE EVALUATION';
+ const projectRows=[['Project / Job',p.projectName],['ARDOT Job Number',p.jobNumber],['Route',p.route],['County / District',[p.county,p.district].filter(Boolean).join(' / ')],['Limits',p.limits],['Evaluator',p.evaluator],['Evaluation Date',p.evaluationDate],['Construction Phase',p.phase],['Construction Dates',[p.constructionStart,p.constructionEnd].filter(Boolean).join(' to ')],['Functional Class',p.functionalClass],['ADT/AADT',p.adt],['Lanes (existing / open)',[p.lanesExisting,p.lanesOpen].filter(Boolean).join(' / ')],['Speed',p.speed?`${p.speed} mph`:'' ],['Work-zone duration',p.workZoneMonths?`${p.workZoneMonths} months`:'' ],['Truck percentage',p.truckPct!==undefined&&p.truckPct!==''?`${p.truckPct}%`:'' ],['Projected maximum queue',p.projectedQueueMiles!==undefined&&p.projectedQueueMiles!==''?`${p.projectedQueueMiles} mi`:'' ],['Queue Duration',p.projectedQueueHours!==undefined&&p.projectedQueueHours!==''?`${p.projectedQueueHours} h`:'' ],['Projected average delay',p.projectedDelayMin!==undefined&&p.projectedDelayMin!==''?`${p.projectedDelayMin} min`:'' ],['Predicted total work-zone crashes',p.predictedCrashes],['Predicted fatal/injury work-zone crashes',p.predictedFICrashes],['Large speed variation',p.speedVariation==='yes'?'Yes':p.speedVariation==='no'?'No':''],['Analysis notes / data source',p.conditionSource]];
+ const sysRows=Object.keys(SYSTEMS).map(id=>{const r=result(id),st=ensureSystem(id),gs=gateStatus(id),activeDecision=(gs==='applicable'||gs==='na')?decisionLabel(st.engineeringDecision):'—';return `<tr><td>${id} – ${esc(SYSTEMS[id].name)}</td><td>${esc(gateStatusLabel(gs))}</td><td>${r.score===null?'—':r.score.toFixed(1)}</td><td>${esc(r.status)}</td><td>${esc(activeDecision)}</td></tr>`;}).join('');
+ const details=Object.keys(SYSTEMS).map(id=>systemReportDetail(id)).join('');
+ const issueHtml=rd.complete?'':`<h2>Outstanding Items</h2><ul>${rd.issues.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`;
+ return `<!DOCTYPE html><html><head><title>ARDOT SWZ Evaluation Report</title><style>body{font-family:Arial,sans-serif;color:#222;margin:28px;font-size:11px}h1{color:#003b70}h2{color:#003b70;border-bottom:1px solid #bbb;padding-bottom:4px;margin-top:24px}h3{margin-bottom:5px}table{width:100%;border-collapse:collapse;margin:8px 0 14px}th,td{border:1px solid #ccc;padding:5px;text-align:left;vertical-align:top}th{background:#eef3f7}.small{font-size:9px;color:#555}.break{page-break-before:always}.banner{font-size:16px;font-weight:800;text-align:center;padding:9px;border:2px solid ${rd.complete?'#2f8f5b':'#b42318'};color:${rd.complete?'#17633c':'#8d1f17'};margin:10px 0}@media print{.no-print{display:none}}</style></head><body><h1>ARDOT Smart Work Zone Decision Support Tool — Evaluation Report</h1><div class="banner">${banner}</div><div class="small">Tool version: ${TOOL_VERSION} • Generated: ${new Date().toLocaleString()}</div><p class="small">This tool supports project screening. Final deployment decisions require engineering review and judgment.</p><h2>Project Information</h2><table>${projectRows.map(([a,b])=>`<tr><th style="width:32%">${esc(a)}</th><td>${esc(b||'—')}</td></tr>`).join('')}</table>${issueHtml}<h2>System Summary</h2><table><thead><tr><th>System</th><th>Applicability</th><th>Score</th><th>Screening Result</th><th>Final Decision</th></tr></thead><tbody>${sysRows}</tbody></table><p class="small">Scores are interpreted within each system and should not be compared directly across technologies.</p><div class="break"></div>${details}<script>window.onload=()=>setTimeout(()=>window.print(),250);<\/script></body></html>`;
+}
+function systemReportDetail(id){
+ const s=SYSTEMS[id],st=ensureSystem(id),r=result(id),gs=gateStatus(id);
+ const gates=s.gates.map(g=>`<tr><th>${esc(g.question)}</th><td>${esc(gateResponseLabel(st.gates[g.id]))}</td></tr>`).join('');
+ let factors='';
+ if(gs==='applicable')factors=s.factors.map(f=>{const o=selectedOption(id,f,st);return `<tr><td>${esc(f.label)}</td><td>${o?esc(o.label):'Unanswered'}</td><td>${o?o.score:'—'}</td></tr>`;}).join('');
+ const scoreLine=r.score===null?`<p><b>Score:</b> Not calculated — ${esc(r.status)}.</p>`:`<p><b>Score:</b> ${r.score.toFixed(1)} / 100 &nbsp; <b>Screening result:</b> ${esc(r.status)}</p>`;
+ return `<h2>${id} – ${esc(s.name)}</h2><h3>Applicability</h3><table><tr><th>Question</th><th>Response</th></tr>${gates}</table>${factors?`<h3>Scoring Factors</h3><table><tr><th>Factor</th><th>Selected Criterion</th><th>Points</th></tr>${factors}</table>${scoreLine}`:scoreLine}<p><b>Final decision:</b> ${esc(decisionLabel(st.engineeringDecision))}<br><b>Comments:</b> ${esc(st.engineeringComment||'—')}</p>`;
+}
+
+document.getElementById('print-report').onclick=()=>{const w=window.open('','_blank');if(!w){alert('Pop-up blocked. Allow pop-ups to print/save the report.');return;}w.document.open();w.document.write(reportHtml());w.document.close();};
+updateNavDots();
 </script>
-</body>
-</html>
+</body></html>
